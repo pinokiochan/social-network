@@ -43,8 +43,9 @@ func connectToDB() *sql.DB {
 	return db
 }
 func serveHTML(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "frontend/index.html")
-}
+    http.ServeFile(w, r, "frontend/index.html")
+   }
+   
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	db := connectToDB()
@@ -138,34 +139,37 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 // Создать комментарий
 func createComment(w http.ResponseWriter, r *http.Request) {
-    log.Println("Received request to create a comment")
+	db := connectToDB()
+	defer db.Close()
 
-    var comment Comment
-    err := json.NewDecoder(r.Body).Decode(&comment)
-    if err != nil {
-        log.Println("Invalid input:", err)
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
+	var comment Comment
+	err := json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    db := connectToDB()
-    defer db.Close()
+	comment.UserID = 1
 
-    err = db.QueryRow(
-        "INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3) RETURNING id",
-        comment.PostID, comment.UserID, comment.Content,
-    ).Scan(&comment.ID)
-    if err != nil {
-        log.Println("Error inserting comment into database:", err)
-        http.Error(w, "Error creating comment", http.StatusInternalServerError)
-        return
-    }
+	err = db.QueryRow(
+		"INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3) RETURNING id",
+		comment.PostID, comment.UserID, comment.Content,
+	).Scan(&comment.ID)
+	if err != nil {
+		http.Error(w, "Error creating comment", http.StatusInternalServerError)
+		return
+	}
 
-    log.Println("Comment created successfully:", comment)
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(comment)
+	row := db.QueryRow("SELECT username FROM users WHERE id = $1", comment.UserID)
+	err = row.Scan(&comment.Username)
+	if err != nil {
+		http.Error(w, "Error fetching username", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(comment)
 }
-
 
 func getComments(w http.ResponseWriter, r *http.Request) {
 	db := connectToDB()
@@ -192,89 +196,88 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(comments)
 }
-
 // Редактировать пост
 func updatePost(w http.ResponseWriter, r *http.Request) {
-	db := connectToDB()
-	defer db.Close()
+    db := connectToDB()
+    defer db.Close()
 
-	var post Post
-	err := json.NewDecoder(r.Body).Decode(&post)
-	if err != nil || post.ID == 0 {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
+    var post Post
+    err := json.NewDecoder(r.Body).Decode(&post)
+    if err != nil || post.ID == 0 {
+        http.Error(w, "Invalid input", http.StatusBadRequest)
+        return
+    }
 
-	_, err = db.Exec("UPDATE posts SET content = $1 WHERE id = $2", post.Content, post.ID)
-	if err != nil {
-		http.Error(w, "Error updating post", http.StatusInternalServerError)
-		return
-	}
+    _, err = db.Exec("UPDATE posts SET content = $1 WHERE id = $2", post.Content, post.ID)
+    if err != nil {
+        http.Error(w, "Error updating post", http.StatusInternalServerError)
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusOK)
 }
 
 // Удалить пост
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	db := connectToDB()
-	defer db.Close()
+    db := connectToDB()
+    defer db.Close()
 
-	var post Post
-	err := json.NewDecoder(r.Body).Decode(&post)
-	if err != nil || post.ID == 0 {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
+    var post Post
+    err := json.NewDecoder(r.Body).Decode(&post)
+    if err != nil || post.ID == 0 {
+        http.Error(w, "Invalid input", http.StatusBadRequest)
+        return
+    }
 
-	_, err = db.Exec("DELETE FROM posts WHERE id = $1", post.ID)
-	if err != nil {
-		http.Error(w, "Error deleting post", http.StatusInternalServerError)
-		return
-	}
+    _, err = db.Exec("DELETE FROM posts WHERE id = $1", post.ID)
+    if err != nil {
+        http.Error(w, "Error deleting post", http.StatusInternalServerError)
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusOK)
 }
 
 // Редактировать комментарий
 func updateComment(w http.ResponseWriter, r *http.Request) {
-	db := connectToDB()
-	defer db.Close()
+    db := connectToDB()
+    defer db.Close()
 
-	var comment Comment
-	err := json.NewDecoder(r.Body).Decode(&comment)
-	if err != nil || comment.ID == 0 || comment.Content == "" {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
+    var comment Comment
+    err := json.NewDecoder(r.Body).Decode(&comment)
+    if err != nil || comment.ID == 0 {
+        http.Error(w, "Invalid input", http.StatusBadRequest)
+        return
+    }
 
-	_, err = db.Exec("UPDATE comments SET content = $1 WHERE id = $2", comment.Content, comment.ID)
-	if err != nil {
-		http.Error(w, "Error updating comment", http.StatusInternalServerError)
-		return
-	}
+    _, err = db.Exec("UPDATE comments SET content = $1 WHERE id = $2", comment.Content, comment.ID)
+    if err != nil {
+        http.Error(w, "Error updating comment", http.StatusInternalServerError)
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusOK)
 }
 
 // Удалить комментарий
 func deleteComment(w http.ResponseWriter, r *http.Request) {
-	db := connectToDB()
-	defer db.Close()
+    db := connectToDB()
+    defer db.Close()
 
-	var comment Comment
-	err := json.NewDecoder(r.Body).Decode(&comment)
-	if err != nil || comment.ID == 0 {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
+    var comment Comment
+    err := json.NewDecoder(r.Body).Decode(&comment)
+    if err != nil || comment.ID == 0 {
+        http.Error(w, "Invalid input", http.StatusBadRequest)
+        return
+    }
 
-	_, err = db.Exec("DELETE FROM comments WHERE id = $1", comment.ID)
-	if err != nil {
-		http.Error(w, "Error deleting comment", http.StatusInternalServerError)
-		return
-	}
+    _, err = db.Exec("DELETE FROM comments WHERE id = $1", comment.ID)
+    if err != nil {
+        http.Error(w, "Error deleting comment", http.StatusInternalServerError)
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusOK)
 }
 
 func main() {
@@ -289,10 +292,11 @@ func main() {
 	http.HandleFunc("/posts/create", createPost)
 	http.HandleFunc("/comments/create", createComment)
 	http.HandleFunc("/comments", getComments)
-	http.HandleFunc("/posts/update", updatePost)
-	http.HandleFunc("/posts/delete", deletePost)
-	http.HandleFunc("/comments/update", updateComment)
-	http.HandleFunc("/comments/delete", deleteComment)
+    http.HandleFunc("/posts/update", updatePost)
+    http.HandleFunc("/posts/delete", deletePost)
+    http.HandleFunc("/comments/update", updateComment)
+    http.HandleFunc("/comments/delete", deleteComment)
+
 
 	fmt.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
