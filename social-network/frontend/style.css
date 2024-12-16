@@ -13,16 +13,42 @@ body {
 }
 
 button {
-    padding: 10px 15px;
+    padding: 8px 12px;
     background-color: #007BFF;
     color: white;
     border: none;
     cursor: pointer;
+    margin-right: 5px;
     border-radius: 5px;
+    font-size: 14px;
 }
 
 button:hover {
     background-color: #0056b3;
+}
+
+textarea {
+    width: calc(100% - 20px);
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.post {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+.comment {
+    margin-left: 20px;
+    font-size: 14px;
+    padding: 5px;
+    border-left: 2px solid #ccc;
 }
 
 textarea {
