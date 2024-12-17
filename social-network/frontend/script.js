@@ -1,74 +1,233 @@
-// Функция для получения и отображения пользователей
-async function getUsers() {
-    const response = await fetch('http://127.0.0.1:8080/users');
-    const users = await response.json();
-    const userList = document.getElementById('user-list');
-    userList.innerHTML = ''; // Очистить старые данные
-    users.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = `${user.username} (${user.email})`;
-        userList.appendChild(li);
-    });
+let currentUser = null;
+
+function showAuthForms() {
+    document.getElementById('auth-forms').style.display = 'block';
+    document.getElementById('content').style.display = 'none';
 }
 
-// Функция для получения и отображения постов
+function showContent() {
+    document.getElementById('auth-forms').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+}
+
+async function register(event) {
+    event.preventDefault();
+    const username = document.getElementById('register-username').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+
+    try {
+        const response = await fetch('http://127.0.0.1:8080/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        if (response.ok) {
+            alert('Registration successful. Please log in.');
+        } else {
+            alert('Registration failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function login(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+        const response = await fetch('http://127.0.0.1:8080/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (response.ok) {
+            const data = await response.json();
+            currentUser = { id: data.user_id, email: email };
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            console.log('Logged in user:', currentUser);
+            showContent();
+            getPosts();
+        } else {
+            alert('Login failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    currentUser = null;
+    showAuthForms();
+}
+
 async function getPosts() {
-    const response = await fetch('http://127.0.0.1:8080/posts');
-    const posts = await response.json();
-    const postList = document.getElementById('post-list');
-    postList.innerHTML = ''; // Очистить старые данные
-    posts.forEach(post => {
-        const div = document.createElement('div');
-        div.classList.add('post');
-        div.innerHTML = `
-            <strong>${post.username}</strong>: ${post.content}<br>
-            <small>Created: ${post.created_at}</small>
-            <button onclick="editPost(${post.id}, prompt('New content:', '${post.content}'))">Edit</button>
-            <button onclick="deletePost(${post.id})">Delete</button>
-            <div id="comments-${post.id}" class="comments-section"></div>
-            <textarea id="comment-${post.id}" placeholder="Write a comment..."></textarea>
-            <button onclick="createComment(event, ${post.id})">Add Comment</button>
-        `;
-        postList.appendChild(div);
-        getComments(post.id); // Загружаем комментарии для поста
-    });
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found');
+        showAuthForms();
+        return;
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:8080/posts', {
+            headers: { 'Authorization': token }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch posts');
+        }
+        const posts = await response.json();
+        const postList = document.getElementById('post-list');
+        postList.innerHTML = '';
+        posts.forEach(post => {
+            console.log('Post user_id:', post.user_id, 'Current user id:', currentUser ? currentUser.id : 'Not logged in');
+            const div = document.createElement('div');
+            div.classList.add('post');
+            div.innerHTML = `
+                <strong>${post.username}</strong>: ${post.content}<br>
+                <small>Created: ${post.created_at}</small>
+                <div class="post-actions">
+                    <button onclick="editPost(${post.id}, '${post.content.replace(/'/g, "\\'")}')" class="edit-btn">Edit</button>
+                    <button onclick="deletePost(${post.id})" class="delete-btn">Delete</button>
+                </div>
+                <div id="comments-${post.id}" class="comments-section"></div>
+                <textarea id="comment-${post.id}" placeholder="Write a comment..."></textarea>
+                <button class="add-comment-btn" data-post-id="${post.id}">Add Comment</button>
+            `;
+            postList.appendChild(div);
+            getComments(post.id);
+        });
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+    }
 }
 
-// Функция для получения и отображения комментариев
-async function getComments(postId) {
-    const response = await fetch('http://127.0.0.1:8080/comments');
-    const comments = await response.json();
-    const commentList = document.getElementById(`comments-${postId}`);
-    commentList.innerHTML = ''; // Очистить старые комментарии
-    comments.filter(comment => comment.post_id === postId).forEach(comment => {
-        const div = document.createElement('div');
-        div.classList.add('comment');
-        div.innerHTML = `
-            <strong>${comment.username}</strong>: ${comment.content}
-            <button onclick="editComment(${comment.id}, '${comment.content}')">Edit</button>
-            <button onclick="deleteComment(${comment.id})">Delete</button>
-        `;
-        commentList.appendChild(div);
-    });
-}
-
-// Функция для создания нового поста
 async function createPost(event) {
     event.preventDefault();
     const content = document.getElementById('post-content').value;
-    const post = { content };
-    const response = await fetch('http://127.0.0.1:8080/posts/create', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(post),
-    });
-    const newPost = await response.json();
-    getPosts(); // Обновим список постов
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found');
+        showAuthForms();
+        return;
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:8080/posts/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify({ content }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to create post');
+        }
+        const newPost = await response.json();
+        getPosts();
+    } catch (error) {
+        console.error('Error creating post:', error);
+    }
 }
 
-// Функция для создания нового комментария
+async function editPost(postId, currentContent) {
+    const newContent = prompt('Edit your post:', currentContent);
+    if (newContent !== null && newContent.trim() !== '') {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found');
+            showAuthForms();
+            return;
+        }
+
+        try {
+            const response = await fetch('http://127.0.0.1:8080/posts/update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({ id: postId, content: newContent.trim() }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to edit post');
+            }
+            getPosts();
+        } catch (error) {
+            console.error('Error editing post:', error);
+            alert('Failed to edit post. Please try again.');
+        }
+    }
+}
+
+async function deletePost(postId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found');
+        showAuthForms();
+        return;
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:8080/posts/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify({ id: postId }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete post');
+        }
+        getPosts();
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('Failed to delete post. Please try again.');
+    }
+}
+
+async function getComments(postId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:8080/comments', {
+            headers: { 'Authorization': token }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch comments');
+        }
+        const comments = await response.json();
+        const commentList = document.getElementById(`comments-${postId}`);
+        commentList.innerHTML = '';
+        comments.filter(comment => comment.post_id === postId).forEach(comment => {
+            console.log('Comment user_id:', comment.user_id, 'Current user id:', currentUser ? currentUser.id : 'Not logged in');
+            const div = document.createElement('div');
+            div.classList.add('comment');
+            div.innerHTML = `
+                <strong>${comment.username}</strong>: ${comment.content}
+                <div class="comment-actions">
+                    <button onclick="editComment(${comment.id}, '${comment.content.replace(/'/g, "\\'")}')" class="edit-btn">Edit</button>
+                    <button onclick="deleteComment(${comment.id})" class="delete-btn">Delete</button>
+                </div>
+            `;
+            commentList.appendChild(div);
+        });
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+    }
+}
+
 async function createComment(event, postId) {
     event.preventDefault();
     const textarea = document.getElementById(`comment-${postId}`);
@@ -79,86 +238,140 @@ async function createComment(event, postId) {
         return;
     }
 
-    const comment = { post_id: postId, content };
-    console.log('Sending comment:', comment); // Логируем данные перед отправкой
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found');
+        showAuthForms();
+        return;
+    }
 
-    const response = await fetch('http://127.0.0.1:8080/comments/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(comment),
-    });
+    try {
+        const response = await fetch('http://127.0.0.1:8080/comments/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
+            body: JSON.stringify({ post_id: postId, content }),
+        });
 
-    if (response.ok) {
-        textarea.value = ''; // Очистить поле комментария
-        console.log('Comment added successfully!');
-        getPosts(); // Обновить список постов
-    } else {
-        const errorText = await response.text();
-        alert(`Failed to add comment: ${errorText}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Comment created:', result);
+        textarea.value = '';
+        await getComments(postId);
+    } catch (error) {
+        console.error('Error creating comment:', error);
+        alert('Failed to create comment. Please try again.');
     }
 }
 
-// Функция для редактирования поста
-async function editPost(postId, newContent) {
-    const response = await fetch('http://127.0.0.1:8080/posts/update', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: postId, content: newContent }),
-    });
-    if (response.ok) {
-        getPosts(); // Обновить список постов
-    }
-}
-
-// Функция для удаления поста
-async function deletePost(postId) {
-    const response = await fetch('http://127.0.0.1:8080/posts/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: postId }),
-    });
-    if (response.ok) {
-        getPosts(); // Обновить список постов
-    }
-}
-
-// Функция для редактирования комментария
 async function editComment(commentId, currentContent) {
     const newContent = prompt('Edit your comment:', currentContent);
-    if (newContent && newContent.trim() !== '') {
-        const response = await fetch('http://127.0.0.1:8080/comments/update', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: commentId, content: newContent.trim() }),
-        });
-        if (response.ok) {
+    if (newContent !== null && newContent.trim() !== '') {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found');
+            showAuthForms();
+            return;
+        }
+
+        try {
+            const response = await fetch('http://127.0.0.1:8080/comments/update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({ id: commentId, content: newContent.trim() }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to edit comment');
+            }
             getPosts();
-        } else {
-            alert('Failed to edit comment');
+        } catch (error) {
+            console.error('Error editing comment:', error);
+            alert('Failed to edit comment. Please try again.');
         }
     }
 }
 
-// Функция для удаления комментария
 async function deleteComment(commentId) {
-    const confirmDelete = confirm('Are you sure you want to delete this comment?');
-    if (confirmDelete) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found');
+        showAuthForms();
+        return;
+    }
+
+    try {
         const response = await fetch('http://127.0.0.1:8080/comments/delete', {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token
+            },
             body: JSON.stringify({ id: commentId }),
         });
-        if (response.ok) {
-            getPosts();
-        } else {
-            alert('Failed to delete comment');
+        if (!response.ok) {
+            throw new Error('Failed to delete comment');
         }
+        getPosts();
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+        alert('Failed to delete comment. Please try again.');
     }
 }
 
-// Инициализация страницы
-getUsers();
-getPosts();
+document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('currentUser');
+    if (token && storedUser) {
+        currentUser = JSON.parse(storedUser);
+        console.log('Stored user:', currentUser);
+        showContent();
+        getPosts();
+    } else {
+        showAuthForms();
+    }
 
-// Подключаем события для форм
-document.getElementById('create-post-form').addEventListener('submit', createPost);
+    document.getElementById('register-form').addEventListener('submit', register);
+    document.getElementById('login-form').addEventListener('submit', login);
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('create-post-form').addEventListener('submit', createPost);
+
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('add-comment-btn')) {
+            const postId = parseInt(event.target.getAttribute('data-post-id'));
+            createComment(event, postId);
+        } else if (event.target.classList.contains('edit-post-btn')) {
+            const postId = parseInt(event.target.getAttribute('data-post-id'));
+            const currentContent = event.target.getAttribute('data-content');
+            const newContent = prompt('Edit your post:', currentContent);
+            if (newContent !== null && newContent.trim() !== '') {
+                editPost(postId, newContent.trim());
+            }
+        } else if (event.target.classList.contains('delete-post-btn')) {
+            const postId = parseInt(event.target.getAttribute('data-post-id'));
+            if (confirm('Are you sure you want to delete this post?')) {
+                deletePost(postId);
+            }
+        } else if (event.target.classList.contains('edit-comment-btn')) {
+            const commentId = parseInt(event.target.getAttribute('data-comment-id'));
+            const currentContent = event.target.getAttribute('data-content');
+            const newContent = prompt('Edit your comment:', currentContent);
+            if (newContent !== null && newContent.trim() !== '') {
+                editComment(commentId, newContent.trim());
+            }
+        } else if (event.target.classList.contains('delete-comment-btn')) {
+            const commentId = parseInt(event.target.getAttribute('data-comment-id'));
+            if (confirm('Are you sure you want to delete this comment?')) {
+                deleteComment(commentId);
+            }
+        }
+    });
+});
+

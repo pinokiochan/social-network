@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -18,20 +21,27 @@ type User struct {
 }
 
 type Post struct {
-	ID        int    `json:"id"`
-	UserID    int    `json:"user_id"`
-	Username  string `json:"username"`
-	Content   string `json:"content"`
-	CreatedAt string `json:"created_at"`
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	Username  string    `json:"username"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Comment struct {
-	ID        int    `json:"id"`
-	PostID    int    `json:"post_id"`
-	UserID    int    `json:"user_id"`
-	Username  string `json:"username"`
-	Content   string `json:"content"`
-	CreatedAt string `json:"created_at"`
+	ID        int       `json:"id"`
+	PostID    int       `json:"post_id"`
+	UserID    int       `json:"user_id"`
+	Username  string    `json:"username"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+var jwtKey = []byte("your_secret_key")
+
+type Claims struct {
+	UserID int `json:"user_id"`
+	jwt.StandardClaims
 }
 
 func connectToDB() *sql.DB {
@@ -42,16 +52,16 @@ func connectToDB() *sql.DB {
 	}
 	return db
 }
+
 func serveHTML(w http.ResponseWriter, r *http.Request) {
-    http.ServeFile(w, r, "frontend/index.html")
-   }
-   
+	http.ServeFile(w, r, "frontend/index.html")
+}
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	db := connectToDB()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, username, email, password FROM users")
+	rows, err := db.Query("SELECT id, username, email FROM users")
 	if err != nil {
 		http.Error(w, "Error fetching users", http.StatusInternalServerError)
 		return
@@ -61,7 +71,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	var users []User
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+		err := rows.Scan(&user.ID, &user.Username, &user.Email)
 		if err != nil {
 			log.Println("Error scanning row:", err)
 			continue
@@ -77,40 +87,6 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-func createPost(w http.ResponseWriter, r *http.Request) {
-	db := connectToDB()
-	defer db.Close()
-
-	var post Post
-	err := json.NewDecoder(r.Body).Decode(&post)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	post.UserID = 1
-
-	err = db.QueryRow(
-		"INSERT INTO posts (user_id, content) VALUES ($1, $2) RETURNING id",
-		post.UserID, post.Content,
-	).Scan(&post.ID)
-	if err != nil {
-		http.Error(w, "Error creating post", http.StatusInternalServerError)
-		return
-	}
-
-	row := db.QueryRow("SELECT username FROM users WHERE id = $1", post.UserID)
-	err = row.Scan(&post.Username)
-	if err != nil {
-		http.Error(w, "Error fetching username", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
-}
-
-// Получить все посты
 func getPosts(w http.ResponseWriter, r *http.Request) {
 	db := connectToDB()
 	defer db.Close()
@@ -137,8 +113,59 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(posts)
 }
 
-// Создать комментарий
+func createPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	db := connectToDB()
+	defer db.Close()
+
+	var post Post
+	err := json.NewDecoder(r.Body).Decode(&post)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err = db.QueryRow(
+		"INSERT INTO posts (user_id, content, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at",
+		userID, post.Content,
+	).Scan(&post.ID, &post.CreatedAt)
+	if err != nil {
+		log.Printf("Error creating post: %v", err)
+		http.Error(w, "Error creating post", http.StatusInternalServerError)
+		return
+	}
+
+	post.UserID = userID
+
+	// Fetch the username for the post
+	row := db.QueryRow("SELECT username FROM users WHERE id = $1", userID)
+	err = row.Scan(&post.Username)
+	if err != nil {
+		log.Printf("Error fetching username: %v", err)
+		http.Error(w, "Error fetching username", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(post)
+}
+
 func createComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	db := connectToDB()
 	defer db.Close()
 
@@ -149,20 +176,34 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment.UserID = 1
+	if comment.Content == "" || comment.PostID == 0 {
+		http.Error(w, "Content and post_id are required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	err = db.QueryRow(
-		"INSERT INTO comments (post_id, user_id, content) VALUES ($1, $2, $3) RETURNING id",
-		comment.PostID, comment.UserID, comment.Content,
-	).Scan(&comment.ID)
+		"INSERT INTO comments (post_id, user_id, content, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, created_at",
+		comment.PostID, userID, comment.Content,
+	).Scan(&comment.ID, &comment.CreatedAt)
 	if err != nil {
+		log.Printf("Error creating comment: %v", err)
 		http.Error(w, "Error creating comment", http.StatusInternalServerError)
 		return
 	}
 
-	row := db.QueryRow("SELECT username FROM users WHERE id = $1", comment.UserID)
+	comment.UserID = userID
+
+	// Fetch the username for the comment
+	row := db.QueryRow("SELECT username FROM users WHERE id = $1", userID)
 	err = row.Scan(&comment.Username)
 	if err != nil {
+		log.Printf("Error fetching username: %v", err)
 		http.Error(w, "Error fetching username", http.StatusInternalServerError)
 		return
 	}
@@ -196,108 +237,300 @@ func getComments(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(comments)
 }
-// Редактировать пост
+
 func updatePost(w http.ResponseWriter, r *http.Request) {
-    db := connectToDB()
-    defer db.Close()
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    var post Post
-    err := json.NewDecoder(r.Body).Decode(&post)
-    if err != nil || post.ID == 0 {
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
+	db := connectToDB()
+	defer db.Close()
 
-    _, err = db.Exec("UPDATE posts SET content = $1 WHERE id = $2", post.Content, post.ID)
-    if err != nil {
-        http.Error(w, "Error updating post", http.StatusInternalServerError)
-        return
-    }
+	var post Post
+	err := json.NewDecoder(r.Body).Decode(&post)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	result, err := db.Exec("UPDATE posts SET content = $1 WHERE id = $2 AND user_id = $3", post.Content, post.ID, userID)
+	if err != nil {
+		http.Error(w, "Error updating post", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Post not found or you don't have permission to edit it", http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-// Удалить пост
 func deletePost(w http.ResponseWriter, r *http.Request) {
-    db := connectToDB()
-    defer db.Close()
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    var post Post
-    err := json.NewDecoder(r.Body).Decode(&post)
-    if err != nil || post.ID == 0 {
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
+	db := connectToDB()
+	defer db.Close()
 
-    _, err = db.Exec("DELETE FROM posts WHERE id = $1", post.ID)
-    if err != nil {
-        http.Error(w, "Error deleting post", http.StatusInternalServerError)
-        return
-    }
+	var post Post
+	err := json.NewDecoder(r.Body).Decode(&post)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	result, err := db.Exec("DELETE FROM posts WHERE id = $1 AND user_id = $2", post.ID, userID)
+	if err != nil {
+		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Post not found or you don't have permission to delete it", http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-// Редактировать комментарий
 func updateComment(w http.ResponseWriter, r *http.Request) {
-    db := connectToDB()
-    defer db.Close()
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    var comment Comment
-    err := json.NewDecoder(r.Body).Decode(&comment)
-    if err != nil || comment.ID == 0 {
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
+	db := connectToDB()
+	defer db.Close()
 
-    _, err = db.Exec("UPDATE comments SET content = $1 WHERE id = $2", comment.Content, comment.ID)
-    if err != nil {
-        http.Error(w, "Error updating comment", http.StatusInternalServerError)
-        return
-    }
+	var comment Comment
+	err := json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	result, err := db.Exec("UPDATE comments SET content = $1 WHERE id = $2 AND user_id = $3", comment.Content, comment.ID, userID)
+	if err != nil {
+		http.Error(w, "Error updating comment", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Comment not found or you don't have permission to edit it", http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-// Удалить комментарий
 func deleteComment(w http.ResponseWriter, r *http.Request) {
-    db := connectToDB()
-    defer db.Close()
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    var comment Comment
-    err := json.NewDecoder(r.Body).Decode(&comment)
-    if err != nil || comment.ID == 0 {
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
+	db := connectToDB()
+	defer db.Close()
 
-    _, err = db.Exec("DELETE FROM comments WHERE id = $1", comment.ID)
-    if err != nil {
-        http.Error(w, "Error deleting comment", http.StatusInternalServerError)
-        return
-    }
+	var comment Comment
+	err := json.NewDecoder(r.Body).Decode(&comment)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is the author of the comment or the author of the post
+	var postUserID int
+	err = db.QueryRow("SELECT user_id FROM posts WHERE id = (SELECT post_id FROM comments WHERE id = $1)", comment.ID).Scan(&postUserID)
+	if err != nil {
+		http.Error(w, "Error fetching post information", http.StatusInternalServerError)
+		return
+	}
+
+	if userID != postUserID {
+		// If the user is not the author of the post, check if they're the author of the comment
+		result, err := db.Exec("DELETE FROM comments WHERE id = $1 AND user_id = $2", comment.ID, userID)
+		if err != nil {
+			http.Error(w, "Error deleting comment", http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			http.Error(w, "Comment not found or you don't have permission to delete it", http.StatusForbidden)
+			return
+		}
+	} else {
+		// If the user is the author of the post, they can delete any comment
+		_, err := db.Exec("DELETE FROM comments WHERE id = $1", comment.ID)
+		if err != nil {
+			http.Error(w, "Error deleting comment", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func generateToken(userID int) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		UserID: userID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtKey)
+}
+
+func getUserIDFromToken(r *http.Request) (int, error) {
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		return 0, fmt.Errorf("no token provided")
+	}
+
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		return 0, fmt.Errorf("invalid token")
+	}
+
+	return claims.UserID, nil
+}
+
+func register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var user User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		return
+	}
+
+	db := connectToDB()
+	defer db.Close()
+
+	err = db.QueryRow(
+		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id",
+		user.Username, user.Email, string(hashedPassword),
+	).Scan(&user.ID)
+	if err != nil {
+		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		return
+	}
+
+	user.Password = "" // Don't send password back
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
+}
+
+func login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var credentials struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&credentials)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	db := connectToDB()
+	defer db.Close()
+
+	var user User
+	err = db.QueryRow("SELECT id, password FROM users WHERE email = $1", credentials.Email).Scan(&user.ID, &user.Password)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := generateToken(user.ID)
+	if err != nil {
+		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{"token": token, "user_id": user.ID})
 }
 
 func main() {
 	http.HandleFunc("/", serveHTML)
-
-	// Маршрут для статических файлов
 	fs := http.FileServer(http.Dir("./frontend"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	http.HandleFunc("/register", register)
+	http.HandleFunc("/login", login)
 	http.HandleFunc("/users", getUsers)
 	http.HandleFunc("/posts", getPosts)
 	http.HandleFunc("/posts/create", createPost)
 	http.HandleFunc("/comments/create", createComment)
 	http.HandleFunc("/comments", getComments)
-    http.HandleFunc("/posts/update", updatePost)
-    http.HandleFunc("/posts/delete", deletePost)
-    http.HandleFunc("/comments/update", updateComment)
-    http.HandleFunc("/comments/delete", deleteComment)
-
+	http.HandleFunc("/posts/update", updatePost)
+	http.HandleFunc("/posts/delete", deletePost)
+	http.HandleFunc("/comments/update", updateComment)
+	http.HandleFunc("/comments/delete", deleteComment)
 
 	fmt.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
 }
+
