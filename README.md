@@ -21,9 +21,9 @@ The Social Network Platform is a web application designed for users to interact 
 - **Beibars Yergali** (Solo Developer)
 
 ## **Screenshot**
-![Login](./frontend/Login.jpg)
-![Main Page](./frontend/main.jpg)
-![Lower part](./frontend/footerjpg.jpg)
+![Login](./web/Login.jpg)
+![Main Page](./web/main.jpg)
+![Lower part](./web/footerjpg.jpg)
 
 ## **Tools and Technologies**
 - **Backend:** Golang (Go)
@@ -52,7 +52,7 @@ sql
 connStr := "host=127.0.0.1 port=5432 user=your_username password=your_password dbname=social-network sslmode=disable"
 ### Step 3: Set Up the Backend
 1. Navigate to the backend directory:
-cd backend
+cd cmd
 2. Install dependencies:
 go mod tidy
 3. Run the backend server:

@@ -56,7 +56,7 @@ func connectToDB() *sql.DB {
 }
 
 func serveHTML(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "frontend/index.html")
+	http.ServeFile(w, r, "web/index.html")
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
@@ -567,7 +567,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", serveHTML)
-	fs := http.FileServer(http.Dir("./frontend"))
+	fs := http.FileServer(http.Dir("./web"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	http.HandleFunc("/register", register)
