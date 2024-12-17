@@ -1,4 +1,6 @@
 let currentUser = null;
+let currentPage = 1;
+const pageSize = 10;
 
 function showAuthForms() {
     document.getElementById('auth-forms').style.display = 'block';
@@ -66,7 +68,7 @@ function logout() {
     showAuthForms();
 }
 
-async function getPosts() {
+async function getPosts(searchParams = {}) {
     const token = localStorage.getItem('token');
     if (!token) {
         console.error('No token found');
@@ -75,7 +77,13 @@ async function getPosts() {
     }
 
     try {
-        const response = await fetch('http://127.0.0.1:8080/posts', {
+        const queryParams = new URLSearchParams({
+            page: searchParams.page || currentPage,
+            page_size: pageSize,
+            ...searchParams
+        });
+
+        const response = await fetch(`http://127.0.0.1:8080/posts?${queryParams}`, {
             headers: { 'Authorization': token }
         });
         if (!response.ok) {
@@ -102,9 +110,40 @@ async function getPosts() {
             postList.appendChild(div);
             getComments(post.id);
         });
+
+        updatePagination();
     } catch (error) {
         console.error('Error fetching posts:', error);
     }
+}
+
+function updatePagination() {
+    const paginationContainer = document.getElementById('pagination');
+    paginationContainer.innerHTML = `
+        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+        <span>Page ${currentPage}</span>
+        <button onclick="changePage(${currentPage + 1})">Next</button>
+    `;
+}
+
+function changePage(newPage) {
+    if (newPage < 1) return;
+    currentPage = newPage;
+    getPosts();
+}
+
+async function searchPosts() {
+    const keyword = document.getElementById('search-input').value;
+    const userId = document.getElementById('user-filter').value;
+    const date = document.getElementById('date-filter').value;
+
+    const searchParams = {};
+    if (keyword) searchParams.keyword = keyword;
+    if (userId) searchParams.user_id = userId;
+    if (date) searchParams.date = date;
+
+    currentPage = 1;
+    await getPosts(searchParams);
 }
 
 async function createPost(event) {
@@ -342,35 +381,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('login-form').addEventListener('submit', login);
     document.getElementById('logout-btn').addEventListener('click', logout);
     document.getElementById('create-post-form').addEventListener('submit', createPost);
+    document.getElementById('search-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        searchPosts();
+    });
 
     document.addEventListener('click', (event) => {
         if (event.target.classList.contains('add-comment-btn')) {
             const postId = parseInt(event.target.getAttribute('data-post-id'));
             createComment(event, postId);
-        } else if (event.target.classList.contains('edit-post-btn')) {
-            const postId = parseInt(event.target.getAttribute('data-post-id'));
-            const currentContent = event.target.getAttribute('data-content');
-            const newContent = prompt('Edit your post:', currentContent);
-            if (newContent !== null && newContent.trim() !== '') {
-                editPost(postId, newContent.trim());
-            }
-        } else if (event.target.classList.contains('delete-post-btn')) {
-            const postId = parseInt(event.target.getAttribute('data-post-id'));
-            if (confirm('Are you sure you want to delete this post?')) {
-                deletePost(postId);
-            }
-        } else if (event.target.classList.contains('edit-comment-btn')) {
-            const commentId = parseInt(event.target.getAttribute('data-comment-id'));
-            const currentContent = event.target.getAttribute('data-content');
-            const newContent = prompt('Edit your comment:', currentContent);
-            if (newContent !== null && newContent.trim() !== '') {
-                editComment(commentId, newContent.trim());
-            }
-        } else if (event.target.classList.contains('delete-comment-btn')) {
-            const commentId = parseInt(event.target.getAttribute('data-comment-id'));
-            if (confirm('Are you sure you want to delete this comment?')) {
-                deleteComment(commentId);
-            }
         }
     });
 });

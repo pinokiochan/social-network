@@ -30,9 +30,20 @@
         <div id="content" style="display: none;">
             <button id="logout-btn">Logout</button>
 
+            <!-- Search and Filter Form -->
+            <form id="search-form">
+                <input type="text" id="search-input" placeholder="Search posts...">
+                <input type="text" id="user-filter" placeholder="Filter by user ID">
+                <input type="date" id="date-filter">
+                <button type="submit">Search</button>
+            </form>
+
             <!-- Список постов -->
             <h2>Posts</h2>
             <div id="post-list"></div>
+
+            <!-- Pagination -->
+            <div id="pagination"></div>
 
             <!-- Создание поста -->
             <h3>Create a Post</h3>

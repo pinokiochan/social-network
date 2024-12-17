@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -91,7 +93,57 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 	db := connectToDB()
 	defer db.Close()
 
-	rows, err := db.Query("SELECT posts.id, posts.user_id, posts.content, posts.created_at, users.username FROM posts JOIN users ON posts.user_id = users.id")
+	query := r.URL.Query()
+	keyword := query.Get("keyword")
+	userID := query.Get("user_id")
+	date := query.Get("date")
+	page := query.Get("page")
+	pageSize := query.Get("page_size")
+
+	if page == "" {
+		page = "1"
+	}
+	if pageSize == "" {
+		pageSize = "10"
+	}
+
+	offset, err := strconv.Atoi(page)
+	if err != nil {
+		http.Error(w, "Invalid page number", http.StatusBadRequest)
+		return
+	}
+	limit, err := strconv.Atoi(pageSize)
+	if err != nil {
+		http.Error(w, "Invalid page size", http.StatusBadRequest)
+		return
+	}
+	offset = (offset - 1) * limit
+
+	baseQuery := "SELECT posts.id, posts.user_id, posts.content, posts.created_at, users.username FROM posts JOIN users ON posts.user_id = users.id"
+	whereClause := []string{}
+	args := []interface{}{}
+
+	if keyword != "" {
+		whereClause = append(whereClause, "posts.content ILIKE $"+strconv.Itoa(len(args)+1))
+		args = append(args, "%"+keyword+"%")
+	}
+	if userID != "" {
+		whereClause = append(whereClause, "posts.user_id = $"+strconv.Itoa(len(args)+1))
+		args = append(args, userID)
+	}
+	if date != "" {
+		whereClause = append(whereClause, "DATE(posts.created_at) = $"+strconv.Itoa(len(args)+1))
+		args = append(args, date)
+	}
+
+	if len(whereClause) > 0 {
+		baseQuery += " WHERE " + strings.Join(whereClause, " AND ")
+	}
+
+	baseQuery += " ORDER BY posts.created_at DESC LIMIT $" + strconv.Itoa(len(args)+1) + " OFFSET $" + strconv.Itoa(len(args)+2)
+	args = append(args, limit, offset)
+
+	rows, err := db.Query(baseQuery, args...)
 	if err != nil {
 		http.Error(w, "Error fetching posts", http.StatusInternalServerError)
 		return
