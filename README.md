@@ -21,9 +21,9 @@ The Social Network Platform is a web application designed for users to interact 
 - **Beibars Yergali** (Solo Developer)
 
 ## **Screenshot**
-![Login](./web/Login.jpg)
-![Main Page](./web/main.jpg)
-![Lower part](./web/footerjpg.jpg)
+![Login](./img/Login.jpg)
+![Main Page](./img/main.jpg)
+![Lower part](./img/footerjpg.jpg)
 
 ## **Tools and Technologies**
 - **Backend:** Golang (Go)

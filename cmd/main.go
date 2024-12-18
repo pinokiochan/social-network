@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -56,7 +57,7 @@ func connectToDB() *sql.DB {
 }
 
 func serveHTML(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "web/index.html")
+	http.ServeFile(w, r, filepath.Join("web", "index.html"))
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
