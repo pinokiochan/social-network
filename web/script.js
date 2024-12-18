@@ -93,12 +93,11 @@ async function getPosts(searchParams = {}) {
         const postList = document.getElementById('post-list');
         postList.innerHTML = '';
         posts.forEach(post => {
-            console.log('Post user_id:', post.user_id, 'Current user id:', currentUser ? currentUser.id : 'Not logged in');
             const div = document.createElement('div');
             div.classList.add('post');
             div.innerHTML = `
                 <strong>${post.username}</strong>: ${post.content}<br>
-                <small>Created: ${post.created_at}</small>
+                <small>Created: ${formatDate(post.created_at)}</small>
                 <div class="post-actions">
                     <button onclick="editPost(${post.id}, '${post.content.replace(/'/g, "\\'")}')" class="edit-btn">Edit</button>
                     <button onclick="deletePost(${post.id})" class="delete-btn">Delete</button>
@@ -110,6 +109,7 @@ async function getPosts(searchParams = {}) {
             postList.appendChild(div);
             getComments(post.id);
         });
+        
 
         updatePagination();
     } catch (error) {
@@ -131,6 +131,20 @@ function changePage(newPage) {
     currentPage = newPage;
     getPosts();
 }
+
+function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric', 
+        hour12: true 
+    };
+    return date.toLocaleString('en-US', options);
+}
+
 
 async function searchPosts() {
     const keyword = document.getElementById('search-input').value;
