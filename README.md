@@ -52,10 +52,14 @@ sql
 connStr := "host=127.0.0.1 port=5432 user=your_username password=your_password dbname=social-network sslmode=disable"
 ### Step 3: Set Up the Backend
 1. Install dependencies:
+```bash
 go mod init social-network
 go mod tidy
+```
 2. Run the backend server:
+```bash
 go run cmd/main.go
+```
 You should see the message: Server is running on port 8080.
 ### FINAL step
 RUN http://127.0.0.1:8080/ in any browser
