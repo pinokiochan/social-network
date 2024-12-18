@@ -51,12 +51,11 @@ sql
 3. Update the main.go file with your PostgreSQL credentials in the connectToDB function. Example:
 connStr := "host=127.0.0.1 port=5432 user=your_username password=your_password dbname=social-network sslmode=disable"
 ### Step 3: Set Up the Backend
-1. Navigate to the backend directory:
-cd cmd
-2. Install dependencies:
+1. Install dependencies:
+go mod init social-network
 go mod tidy
-3. Run the backend server:
-go run main.go
+2. Run the backend server:
+go run cmd/main.go
 You should see the message: Server is running on port 8080.
 ### FINAL step
 RUN http://127.0.0.1:8080/ in any browser
