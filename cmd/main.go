@@ -7,9 +7,11 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/lib/pq"
@@ -58,6 +60,19 @@ func connectToDB() *sql.DB {
 
 func serveHTML(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join("web", "index.html"))
+}
+
+func isAlpha(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+func isValidEmail(email string) bool {
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	return re.MatchString(email)
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
@@ -168,49 +183,54 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 func createPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, `{"status": "fail", "message": "Method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	var post Post
+	err := json.NewDecoder(r.Body).Decode(&post)
+	if err != nil {
+		http.Error(w, `{"status": "fail", "message": "Invalid JSON format"}`, http.StatusBadRequest)
+		return
+	}
+
+	if post.Content == "" {
+		http.Error(w, `{"status": "fail", "message": "Post content cannot be empty"}`, http.StatusBadRequest)
+		return
+	}
+
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, `{"status": "fail", "message": "Unauthorized"}`, http.StatusUnauthorized)
 		return
 	}
 
 	db := connectToDB()
 	defer db.Close()
 
-	var post Post
-	err := json.NewDecoder(r.Body).Decode(&post)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-
-	userID, err := getUserIDFromToken(r)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
 	err = db.QueryRow(
 		"INSERT INTO posts (user_id, content, created_at) VALUES ($1, $2, NOW()) RETURNING id, created_at",
 		userID, post.Content,
 	).Scan(&post.ID, &post.CreatedAt)
 	if err != nil {
-		log.Printf("Error creating post: %v", err)
-		http.Error(w, "Error creating post", http.StatusInternalServerError)
+		http.Error(w, `{"status": "fail", "message": "Error creating post"}`, http.StatusInternalServerError)
 		return
 	}
 
 	post.UserID = userID
 
-	// Fetch the username for the post
 	row := db.QueryRow("SELECT username FROM users WHERE id = $1", userID)
 	err = row.Scan(&post.Username)
 	if err != nil {
-		log.Printf("Error fetching username: %v", err)
-		http.Error(w, "Error fetching username", http.StatusInternalServerError)
+		http.Error(w, `{"status": "fail", "message": "Error fetching username"}`, http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "success",
+		"post":   post,
+	})
 }
 
 func createComment(w http.ResponseWriter, r *http.Request) {
@@ -252,7 +272,6 @@ func createComment(w http.ResponseWriter, r *http.Request) {
 
 	comment.UserID = userID
 
-	// Fetch the username for the comment
 	row := db.QueryRow("SELECT username FROM users WHERE id = $1", userID)
 	err = row.Scan(&comment.Username)
 	if err != nil {
@@ -433,7 +452,7 @@ func deleteComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID != postUserID {
-		// If the user is not the author of the post, check if they're the author of the comment
+
 		result, err := db.Exec("DELETE FROM comments WHERE id = $1 AND user_id = $2", comment.ID, userID)
 		if err != nil {
 			http.Error(w, "Error deleting comment", http.StatusInternalServerError)
@@ -446,7 +465,7 @@ func deleteComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		// If the user is the author of the post, they can delete any comment
+
 		_, err := db.Exec("DELETE FROM comments WHERE id = $1", comment.ID)
 		if err != nil {
 			http.Error(w, "Error deleting comment", http.StatusInternalServerError)
@@ -494,39 +513,57 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var input struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, `{"status": "fail", "message": "Invalid JSON format"}`, http.StatusBadRequest)
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if input.Username == "" || input.Email == "" || input.Password == "" {
+		http.Error(w, `{"status": "fail", "message": "Missing required fields: username, email, or password"}`, http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		http.Error(w, `{"status": "fail", "message": "Error hashing password"}`, http.StatusInternalServerError)
 		return
 	}
 
 	db := connectToDB()
 	defer db.Close()
 
+	var userID int
 	err = db.QueryRow(
 		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id",
-		user.Username, user.Email, string(hashedPassword),
-	).Scan(&user.ID)
+		input.Username, input.Email, string(hashedPassword),
+	).Scan(&userID)
 	if err != nil {
-		http.Error(w, "Error creating user", http.StatusInternalServerError)
+		http.Error(w, `{"status": "fail", "message": "Error creating user"}`, http.StatusInternalServerError)
 		return
 	}
 
-	user.Password = "" // Don't send password back
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status": "success",
+		"user": map[string]interface{}{
+			"id":       userID,
+			"username": input.Username,
+			"email":    input.Email,
+		},
+	})
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, `{"status": "fail", "message": "Method not allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -534,9 +571,20 @@ func login(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, `{"status": "fail", "message": "Invalid JSON format"}`, http.StatusBadRequest)
+		return
+	}
+
+	if credentials.Email == "" || credentials.Password == "" {
+		http.Error(w, `{"status": "fail", "message": "Email and password are required"}`, http.StatusBadRequest)
+		return
+	}
+
+	if !isValidEmail(credentials.Email) {
+		http.Error(w, `{"status": "fail", "message": "Invalid email format"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -546,24 +594,28 @@ func login(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err = db.QueryRow("SELECT id, password FROM users WHERE email = $1", credentials.Email).Scan(&user.ID, &user.Password)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, `{"status": "fail", "message": "Invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, `{"status": "fail", "message": "Invalid credentials"}`, http.StatusUnauthorized)
 		return
 	}
 
 	token, err := generateToken(user.ID)
 	if err != nil {
-		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		http.Error(w, `{"status": "fail", "message": "Error generating token"}`, http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"token": token, "user_id": user.ID})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "success",
+		"token":   token,
+		"user_id": user.ID,
+	})
 }
 
 func main() {
