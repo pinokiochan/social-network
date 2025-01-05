@@ -47,4 +47,3 @@ func GetUserIDFromToken(r *http.Request) (int, error) {
 
 	return claims.UserID, nil
 }
-

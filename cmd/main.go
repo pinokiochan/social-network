@@ -22,7 +22,7 @@ func main() {
 
 	// Static file servers
 	fsWeb := http.FileServer(http.Dir("./web/static"))
-	fsImg := http.FileServer(http.Dir("./assets/images"))
+	fsImg := http.FileServer(http.Dir("./web/img"))
 
 	// Routes
 	http.Handle("/static/", http.StripPrefix("/static/", fsWeb))
@@ -31,7 +31,7 @@ func main() {
 	// API routes
 	http.HandleFunc("/api/register", userHandler.Register)
 	http.HandleFunc("/api/login", userHandler.Login)
-	
+
 	// Protected routes
 	http.HandleFunc("/api/users", middleware.JWT(userHandler.GetUsers))
 	http.HandleFunc("/api/posts", middleware.JWT(postHandler.GetPosts))
@@ -49,4 +49,3 @@ func main() {
 	fmt.Println("Server is running on http://127.0.0.1:8080")
 	log.Fatal(http.ListenAndServe("127.0.0.1:8080", nil))
 }
-

@@ -1,16 +1,16 @@
 package handlers
 
 import (
+	"html/template"
 	"net/http"
-	"path/filepath"
 )
 
+
 func ServeHTML(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	t, err := template.ParseFiles("./web/templates/index.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	path := filepath.Join("web", "templates", "index.html")
-	http.ServeFile(w, r, path)
+	t.Execute(w, nil)
 }
