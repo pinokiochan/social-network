@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Broadcast</title>
+  <link rel="stylesheet" href="/static/css/email.css">
+  <link rel="icon" href="img\social-media.png">
+</head>
+
+<body>
+  <div class="container">
+    <div style="margin-bottom: 20px;">
+      <a href="/" style="margin-right: 10px; text-decoration: none; color: #007BFF;">Back to Main Site</a>
+      <a href="/admin" style="text-decoration: none; color: #007BFF;">Admin Panel</a>
+    </div>
+    <h1>Email Broadcast</h1>
+    <form id="emailForm">
+      <label for="subject">Topic</label>
+      <input type="text" id="subject" name="subject" placeholder="Enter email subject" required>
+
+      <label for="body">Message</label>
+      <textarea id="body" name="body" rows="4" placeholder="Enter email body" required></textarea>
+
+      <label for="users">Recipients (comma-separated emails)</label>
+      <input type="text" id="users" name="users" placeholder="e.g. user1@example.com, user2@example.com" required>
+
+      <button type="submit">Send Emails</button>
+      <p class="error" id="errorMessage"></p>
+      <p class="success" id="successMessage"></p>
+    </form>
+  </div>
+
+  <script src="/static/js/email.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Social Network</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <link rel="icon" href="img\social-media.png">
+
+</head>
+
+<body>
+    <nav class="navigation">
+        <h1>Admin Panel</h1>
+        <a href="/" class="button primary">Back to Main Site</a>
+        
+        <button id="logout-btn" class="button danger">Logout</button>
+    </nav>
+    
+    <div class="admin-panel">
+        
+
+        <!-- Notification -->
+        <div id="notification" class="notification"></div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="admin-login">
+            <h2>Admin Login</h2>
+            <form id="admin-login-form" class="form-grid">
+                <input type="email" id="admin-email" placeholder="Email" required>
+                <input type="password" id="admin-password" placeholder="Password" required>
+                <button type="submit" class="button primary">Login</button>
+            </form>
+        </div>
+
+        <!-- Admin Content -->
+        <div id="admin-content" style="display: none;">
+            <!-- Statistics Section -->
+            <div class="stats-section">
+                <h3>Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Users</h4>
+                        <p id="total-users">Loading...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Posts</h4>
+                        <p id="total-posts">Loading...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Comments</h4>
+                        <p id="total-comments">Loading...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Active Users (24h)</h4>
+                        <p id="active-users">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="users-section">
+                <h3>User Management</h3>
+                <div class="filters">
+                    <input type="text" id="username-filter" placeholder="Username">
+                    <input type="email" id="email-filter" placeholder="Email">
+                    <select id="role-filter">
+                        <option value="">Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                    </select>
+                    <button id="apply-filters" class="button primary">Apply Filters</button>
+                    <button id="reset-filters" class="button secondary">Reset Filters</button>
+                </div>
+                <!-- List of users will be dynamically loaded here -->
+                <div id="users-list" class="users-list"></div>
+            </div>
+
+            <!-- Broadcast Email -->
+            <div class="broadcast-section">
+                <h3>Broadcast Email</h3>
+                <form id="broadcast-form" class="form-grid">
+                    <form id="broadcast-form" class="form-grid">
+                        <a href="/email" class="button primary">Send Email</a>
+        
+                    </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+
+</html>
+

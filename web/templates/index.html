@@ -4,15 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Network</title>
-    <!-- Иконка сайта -->
-    <link rel="icon" type="image/png" href="/img/social-media.png">
-    <!-- Подключение стилей -->
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="img\social-media.png">
 </head>
 <body>
-    <div class="container">
+    <nav class="main-nav">
         <h1>Social Network</h1>
-        
+        <div id="admin-link">
+            <a href="/admin" class="nav-link">Admin Panel</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <nav class="main-nav">
+            <h1>Social Network</h1>
+            <div id="admin-link" style="display: none;">
+                <a href="/admin" class="nav-link">Admin Panel</a>
+            </div>
+        </nav>
+
         <div id="auth-forms">
             <h2>Register</h2>
             <form id="register-form">
@@ -52,7 +62,7 @@
             </form>
         </div>
     </div>
-
     <script src="/static/js/script.js"></script>
 </body>
 </html>
+
