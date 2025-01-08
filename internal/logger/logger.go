@@ -2,14 +2,11 @@ package logger
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"path/filepath"
-	
 	"strings"
-	
-
-	"github.com/sirupsen/logrus"
 )
 
 // Global logger instance
@@ -122,4 +119,3 @@ func DebugLogger(message string, fields Fields) {
 func WarnLogger(message string, fields Fields) {
 	Log.WithFields(logrus.Fields(fields)).Warn(message)
 }
-
