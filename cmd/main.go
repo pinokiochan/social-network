@@ -92,7 +92,7 @@ func main() {
 	// Получаем порт из переменной окружения
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8080" // Порт по умолчанию для локальной разработки
 	}
 	srv := &http.Server{
 		Addr:         ":" + port,
