@@ -12,7 +12,7 @@ import (
 	"github.com/pinokiochan/social-network/internal/database"
 	"github.com/pinokiochan/social-network/internal/handlers"
 	"github.com/pinokiochan/social-network/internal/middleware"
-	"github.com/pinokiochan/social-network/internal/logger"  // Импортируем пакет logger
+	"github.com/pinokiochan/social-network/internal/logger"
 
 	"github.com/sirupsen/logrus"
 )
@@ -23,13 +23,13 @@ func main() {
 	// Открытие/создание файла для логирования
 	logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		logger.Log.Fatal("Failed to open log file:", err)
+		logger.Log.Fatalf("Failed to open log file: %v", err)
 	}
 	defer logFile.Close()
 
 	// Настройка логгера для записи в файл
-	logger.Log.SetOutput(logFile) // Все логи теперь будут записываться в файл
-	logger.Log.SetFormatter(&logrus.JSONFormatter{}) // Форматируем логи в JSON
+	logger.Log.SetOutput(logFile)
+	logger.Log.SetFormatter(&logrus.JSONFormatter{})
 
 	// Логируем начало работы приложения
 	logger.Log.Info("Starting application")
@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		logger.Log.WithError(err).Fatal("Failed to connect to database")
 	}
-	defer db.Close()  // Убедитесь, что соединение с БД будет закрыто, когда приложение завершится
+	defer db.Close()
 
 	logger.Log.Info("Database connection established")
 
@@ -71,7 +71,7 @@ func main() {
 	mux.HandleFunc("/api/comments/update", middleware.JWT(commentHandler.UpdateComment))
 	mux.HandleFunc("/api/comments/delete", middleware.JWT(commentHandler.DeleteComment))
 
-	// Админ-роуты (ограничены пользователями с правами администратора)
+	// Админ-роуты
 	mux.HandleFunc("/admin", handlers.ServeAdminHTML)
 	mux.HandleFunc("/api/admin/stats", middleware.AdminOnly(adminHandler.GetStats))
 	mux.HandleFunc("/api/admin/broadcast-to-selected", adminHandler.BroadcastEmailToSelectedUsers)
@@ -83,42 +83,50 @@ func main() {
 	mux.HandleFunc("/", handlers.ServeHTML)
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 
-	// Создание и настройка HTTP-сервера с тайм-аутами
+	// Health check
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	// Получаем порт из переменной окружения
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	srv := &http.Server{
-		Addr:         "127.0.0.1:8080",
+		Addr:         ":" + port,
 		Handler:      middleware.LoggingMiddleware(middleware.RateLimitMiddleware(mux)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}
 
-	// Запуск сервера в горутине, чтобы он не блокировал основное выполнение
+	// Запуск сервера в горутине
 	go func() {
 		logger.Log.WithField("address", srv.Addr).Info("Starting server")
 
-		// Запуск сервера и логирование ошибок
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Log.WithError(err).Fatal("Server failed to start")
 		}
 	}()
 
-	// Ожидание сигнала завершения (Ctrl+C или системное завершение)
+	// Ожидание сигнала завершения
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit  // Блокируем выполнение до получения сигнала
+	<-quit
 
 	// Логируем процесс завершения работы
 	logger.Log.Info("Server is shutting down...")
 
-	// Создание контекста с тайм-аутом, чтобы завершить текущие запросы
+	// Завершаем работу с тайм-аутом
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Грамотное завершение работы сервера
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Log.WithError(err).Error("Server forced to shutdown")
 	}
 
-	// Ожидание завершения фоновых задач перед полным завершением
+	// Ожидание завершения фоновых задач
 	logger.Log.Info("Waiting for background tasks to complete...")
 	wg.Wait()
 
