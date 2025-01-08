@@ -7,6 +7,8 @@ import (
 	"strings"
 	"github.com/pinokiochan/social-network/internal/models"
 	"github.com/pinokiochan/social-network/internal/middleware"
+	"github.com/pinokiochan/social-network/internal/logger"
+	"github.com/sirupsen/logrus"
 	"database/sql"
 )
 
@@ -20,18 +22,28 @@ func NewPostHandler(db *sql.DB) *PostHandler {
 
 func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		logger.Log.WithFields(logrus.Fields{
+			"method": r.Method,
+			"path":   r.URL.Path,
+		}).Warn("Method not allowed")
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var post models.Post
 	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Invalid JSON format")
 		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 		return
 	}
 
 	userID, err := middleware.GetUserIDFromToken(r)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Unauthorized access attempt")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -42,11 +54,20 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	).Scan(&post.ID, &post.CreatedAt)
 
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error":  err.Error(),
+			"userID": userID,
+		}).Error("Failed to create post")
 		http.Error(w, "Error creating post", http.StatusInternalServerError)
 		return
 	}
 
 	post.UserID = userID
+
+	logger.Log.WithFields(logrus.Fields{
+		"postID": post.ID,
+		"userID": userID,
+	}).Info("Post created successfully")
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(post)
@@ -71,7 +92,11 @@ func (h *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(pageSize)
 	offset = (offset - 1) * limit
 
-	baseQuery := "SELECT posts.id, posts.user_id, posts.content, posts.created_at, users.username FROM posts JOIN users ON posts.user_id = users.id"
+	baseQuery := `
+		SELECT posts.id, posts.user_id, posts.content, posts.created_at, users.username 
+		FROM posts 
+		JOIN users ON posts.user_id = users.id
+	`
 	whereClause := []string{}
 	args := []interface{}{}
 
@@ -92,11 +117,23 @@ func (h *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		baseQuery += " WHERE " + strings.Join(whereClause, " AND ")
 	}
 
-	baseQuery += " ORDER BY posts.created_at DESC LIMIT $" + strconv.Itoa(len(args)+1) + " OFFSET $" + strconv.Itoa(len(args)+2)
+	baseQuery += " ORDER BY posts.created_at DESC LIMIT $" + strconv.Itoa(len(args)+1) + 
+		" OFFSET $" + strconv.Itoa(len(args)+2)
 	args = append(args, limit, offset)
+
+	logger.Log.WithFields(logrus.Fields{
+		"keyword":    keyword,
+		"user_id":    userID,
+		"date":       date,
+		"page":       page,
+		"page_size":  pageSize,
+	}).Debug("Fetching posts with filters")
 
 	rows, err := h.db.Query(baseQuery, args...)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to fetch posts")
 		http.Error(w, "Error fetching posts", http.StatusInternalServerError)
 		return
 	}
@@ -107,11 +144,18 @@ func (h *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		var post models.Post
 		err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.CreatedAt, &post.Username)
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Error scanning post")
 			http.Error(w, "Error scanning post", http.StatusInternalServerError)
 			return
 		}
 		posts = append(posts, post)
 	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"count": len(posts),
+	}).Info("Posts fetched successfully")
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
@@ -119,66 +163,118 @@ func (h *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 
 func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
+		logger.Log.WithFields(logrus.Fields{
+			"method": r.Method,
+			"path":   r.URL.Path,
+		}).Warn("Method not allowed")
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var post models.Post
 	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Invalid input")
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
 	userID, err := middleware.GetUserIDFromToken(r)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Unauthorized access attempt")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	result, err := h.db.Exec("UPDATE posts SET content = $1 WHERE id = $2 AND user_id = $3", post.Content, post.ID, userID)
+	result, err := h.db.Exec(
+		"UPDATE posts SET content = $1 WHERE id = $2 AND user_id = $3",
+		post.Content, post.ID, userID,
+	)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error":  err.Error(),
+			"postID": post.ID,
+			"userID": userID,
+		}).Error("Failed to update post")
 		http.Error(w, "Error updating post", http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
+		logger.Log.WithFields(logrus.Fields{
+			"postID": post.ID,
+			"userID": userID,
+		}).Warn("Post not found or unauthorized modification attempt")
 		http.Error(w, "Post not found or you don't have permission to edit it", http.StatusForbidden)
 		return
 	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"postID": post.ID,
+		"userID": userID,
+	}).Info("Post updated successfully")
 
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
+		logger.Log.WithFields(logrus.Fields{
+			"method": r.Method,
+			"path":   r.URL.Path,
+		}).Warn("Method not allowed")
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var post models.Post
 	if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Invalid input")
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
 	userID, err := middleware.GetUserIDFromToken(r)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Unauthorized access attempt")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	result, err := h.db.Exec("DELETE FROM posts WHERE id = $1 AND user_id = $2", post.ID, userID)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error":  err.Error(),
+			"postID": post.ID,
+			"userID": userID,
+		}).Error("Failed to delete post")
 		http.Error(w, "Error deleting post", http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
+		logger.Log.WithFields(logrus.Fields{
+			"postID": post.ID,
+			"userID": userID,
+		}).Warn("Post not found or unauthorized deletion attempt")
 		http.Error(w, "Post not found or you don't have permission to delete it", http.StatusForbidden)
 		return
 	}
 
+	logger.Log.WithFields(logrus.Fields{
+		"postID": post.ID,
+		"userID": userID,
+	}).Info("Post deleted successfully")
+
 	w.WriteHeader(http.StatusOK)
 }
+

@@ -1,24 +1,23 @@
 /* Общие стили */
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f4f4f9, #e0e0e0);
+    color: #333;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f9;
-    color: #333;
 }
 
 .container {
-    max-width: 600px;
-    margin: 20px auto;
+    max-width: 700px;
+    margin: 30px auto;
     padding: 20px;
     background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 h1, h2, h3 {
-    color: #007BFF;
+    color: #333;
 }
 
 /* Стили навигации */
@@ -26,22 +25,22 @@ nav.main-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background-color: #007BFF;
+    padding: 15px 25px;
+    background: linear-gradient(135deg, #007BFF, #0056b3);
     color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 12px 12px;
 }
 
 nav.main-nav h1 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 600;
 }
 
 nav.main-nav .nav-link {
     color: #ffffff;
     text-decoration: none;
     background-color: #0056b3;
-    padding: 5px 10px;
+    padding: 8px 15px;
     border-radius: 5px;
     transition: background-color 0.3s;
 }
@@ -54,16 +53,17 @@ nav.main-nav .nav-link:hover {
 form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
 input, textarea, button {
     font-size: 1rem;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 5px;
-    transition: all 0.3s;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 input:focus, textarea:focus {
@@ -78,6 +78,7 @@ button {
     border: none;
     cursor: pointer;
     font-weight: bold;
+    transition: background-color 0.3s;
 }
 
 button:hover {
@@ -88,10 +89,11 @@ button:hover {
 .post {
     background-color: #ffffff;
     border: 1px solid #ddd;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .post:hover {
@@ -103,19 +105,19 @@ button:hover {
     background-color: #f8f8f8;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px;
-    margin-top: 10px;
+    padding: 12px;
+    margin-top: 12px;
 }
 
 /* Действия (кнопки редактирования и удаления) */
 .post-actions, .comment-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 15px;
 }
 
 .edit-btn, .delete-btn {
-    padding: 8px 12px;
+    padding: 10px 15px;
     font-size: 0.9rem;
     font-weight: bold;
     color: white;
@@ -153,13 +155,13 @@ textarea {
 #pagination {
     display: flex;
     justify-content: center;
-    gap: 5px;
-    margin-top: 20px;
+    gap: 10px;
+    margin-top: 30px;
 }
 
 #pagination button {
-    padding: 8px 12px;
-    font-size: 0.9rem;
+    padding: 12px 20px;
+    font-size: 1rem;
     background-color: #007BFF;
     color: white;
     border: none;
@@ -176,4 +178,31 @@ textarea {
     background-color: #ddd;
     color: #aaa;
     cursor: not-allowed;
+}
+
+input, button {
+    border-radius: 8px;
+}
+
+textarea {
+    font-size: 1rem;
+    padding: 12px;
+    resize: vertical;
+    border-radius: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    nav.main-nav {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    nav.main-nav h1 {
+        margin-bottom: 10px;
+    }
 }

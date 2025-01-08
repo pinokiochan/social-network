@@ -8,5 +8,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.0
 	github.com/rs/zerolog v1.33.0
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/crypto v0.32.0
 )

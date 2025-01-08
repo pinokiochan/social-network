@@ -26,8 +26,11 @@ func AdminOnly(next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, "Admin access required", http.StatusForbidden)
 			return
 		}
+		
 
 		// Если все проверки пройдены, продолжаем выполнение запроса
 		next.ServeHTTP(w, r)
+
 	}
+	
 }

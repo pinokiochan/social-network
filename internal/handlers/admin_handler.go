@@ -3,17 +3,18 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
-	"log"
-	"strings"
+	"sync"
 	"github.com/pinokiochan/social-network/internal/models"
 	"github.com/pinokiochan/social-network/internal/utils"
+	"github.com/pinokiochan/social-network/internal/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type AdminHandler struct {
 	db *sql.DB
+	wg *sync.WaitGroup
 }
 
 type AdminStats struct {
@@ -23,39 +24,8 @@ type AdminStats struct {
 	ActiveUsers24h int `json:"active_users_24h"`
 }
 
-func NewAdminHandler(db *sql.DB) *AdminHandler {
-	return &AdminHandler{db: db}
-}
-
-// GetUserByID retrieves a user by ID from the database
-func (h *AdminHandler) GetUserByID(id int) (*models.User, error) {
-	query := `SELECT id, username, email, is_admin, created_at, updated_at FROM users WHERE id = $1`
-	user := models.User{}
-	err := h.db.QueryRow(query, id).Scan(&user.ID, &user.Username, &user.Email, &user.IsAdmin, &user.CreatedAt, &user.UpdatedAt)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
-	}
-	return &user, nil
-}
-
-// UpdateUser updates user details in the database
-func (h *AdminHandler) UpdateUser(user *models.User) error {
-	query := `UPDATE users SET username = $1, email = $2, is_admin = $3, updated_at = NOW() WHERE id = $4`
-	result, err := h.db.Exec(query, user.Username, user.Email, user.IsAdmin, user.ID)
-	if err != nil {
-		return err
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
-		return errors.New("no user updated, possibly invalid ID")
-	}
-	return nil
+func NewAdminHandler(db *sql.DB, wg *sync.WaitGroup) *AdminHandler {
+	return &AdminHandler{db: db, wg: wg}
 }
 
 func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
@@ -63,85 +33,104 @@ func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 
 	err := h.db.QueryRow("SELECT COUNT(*) FROM users").Scan(&stats.TotalUsers)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to get user stats")
 		http.Error(w, "Error getting user stats", http.StatusInternalServerError)
 		return
 	}
 
 	err = h.db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&stats.TotalPosts)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to get post stats")
 		http.Error(w, "Error getting post stats", http.StatusInternalServerError)
 		return
 	}
 
 	err = h.db.QueryRow("SELECT COUNT(*) FROM comments").Scan(&stats.TotalComments)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to get comment stats")
 		http.Error(w, "Error getting comment stats", http.StatusInternalServerError)
 		return
 	}
 
 	err = h.db.QueryRow(`
-        SELECT COUNT(DISTINCT user_id) 
-        FROM (
-            SELECT user_id FROM posts WHERE created_at > NOW() - INTERVAL '24 hours'
-            UNION
-            SELECT user_id FROM comments WHERE created_at > NOW() - INTERVAL '24 hours'
-        ) as active_users
-    `).Scan(&stats.ActiveUsers24h)
+		SELECT COUNT(DISTINCT user_id) 
+		FROM (
+			SELECT user_id FROM posts WHERE created_at > NOW() - INTERVAL '24 hours'
+			UNION
+			SELECT user_id FROM comments WHERE created_at > NOW() - INTERVAL '24 hours'
+		) as active_users
+	`).Scan(&stats.ActiveUsers24h)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to get active users stats")
 		http.Error(w, "Error getting active users stats", http.StatusInternalServerError)
 		return
 	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"total_users":      stats.TotalUsers,
+		"total_posts":      stats.TotalPosts,
+		"total_comments":   stats.TotalComments,
+		"active_users_24h": stats.ActiveUsers24h,
+	}).Info("Admin stats retrieved successfully")
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(stats)
 }
 
 func (h *AdminHandler) BroadcastEmailToSelectedUsers(w http.ResponseWriter, r *http.Request) {
-    var request struct {
-        Subject string   `json:"subject"`
-        Body    string   `json:"body"`
-        Users   []string `json:"users"` // A list of user emails
-    }
+	var request struct {
+		Subject string   `json:"subject"`
+		Body    string   `json:"body"`
+		Users   []string `json:"users"`
+	}
 
-    // Decode the request body
-    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		logger.Log.WithError(err).Error("Invalid request body")
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    // Basic validation
-    if len(request.Users) == 0 || strings.TrimSpace(request.Subject) == "" || strings.TrimSpace(request.Body) == "" {
-        http.Error(w, "Please provide users, subject, and body", http.StatusBadRequest)
-        return
-    }
+	logger.Log.WithFields(logrus.Fields{
+		"subject":     request.Subject,
+		"user_count":  len(request.Users),
+	}).Info("Starting email broadcast")
 
-    // Use goroutines to send emails concurrently
-    go func() {
-        for _, userEmail := range request.Users {
-            err := utils.SendEmail(userEmail, request.Subject, request.Body)
-            if err != nil {
-                log.Printf("Failed to send email to %s: %v", userEmail, err)
-                continue
-            }
-            log.Printf("Email sent to %s successfully", userEmail)
-        }
-    }()
+	h.wg.Add(1)
+	go func() {
+		defer h.wg.Done()
+		for _, userEmail := range request.Users {
+			err := utils.SendEmail(userEmail, request.Subject, request.Body)
+			if err != nil {
+				logger.Log.WithError(err).WithField("email", userEmail).Error("Failed to send broadcast email")
+				continue
+			}
+			logger.Log.WithField("email", userEmail).Info("Broadcast email sent successfully")
+		}
+		logger.Log.Info("Email broadcast completed")
+	}()
 
-    // Respond immediately with a success message
-    response := map[string]interface{}{
-        "success": true,
-        "message": "Emails are being sent",
-    }
-
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Emails are being sent",
+	})
 }
-
 
 func (h *AdminHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.db.Query("SELECT id, username, email, is_admin FROM users")
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to fetch users")
 		http.Error(w, "Error fetching users", http.StatusInternalServerError)
 		return
 	}
@@ -151,11 +140,18 @@ func (h *AdminHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var user models.User
 		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.IsAdmin); err != nil {
+			logger.Log.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Error scanning user")
 			http.Error(w, "Error scanning user", http.StatusInternalServerError)
 			return
 		}
 		users = append(users, user)
 	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"user_count": len(users),
+	}).Info("Users fetched successfully")
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
@@ -164,21 +160,43 @@ func (h *AdminHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
+		logger.Log.Warn("Missing user ID in delete request")
 		http.Error(w, "Missing user ID", http.StatusBadRequest)
 		return
 	}
 
 	id, err := strconv.Atoi(userID)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"id":    userID,
+		}).Error("Invalid user ID format")
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	_, err = h.db.Exec("DELETE FROM users WHERE id = $1", id)
+	result, err := h.db.Exec("DELETE FROM users WHERE id = $1", id)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"id":    id,
+		}).Error("Failed to delete user")
 		http.Error(w, "Error deleting user", http.StatusInternalServerError)
 		return
 	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		logger.Log.WithFields(logrus.Fields{
+			"id": id,
+		}).Warn("User not found for deletion")
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"id": id,
+	}).Info("User deleted successfully")
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
@@ -186,6 +204,9 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *AdminHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		logger.Log.WithFields(logrus.Fields{
+			"method": r.Method,
+		}).Warn("Method not allowed")
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -196,35 +217,55 @@ func (h *AdminHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 		Email    string `json:"email"`
 	}
 
-	// Parse JSON payload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		log.Printf("Error decoding payload: %v", err)
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to decode payload")
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// Log received payload for debugging
-	log.Printf("EditUser payload: %+v", payload)
-
-	// Validate input
 	if payload.ID == 0 || payload.Username == "" || payload.Email == "" {
-		log.Printf("Validation error: ID=%d, Username=%s, Email=%s", payload.ID, payload.Username, payload.Email)
+		logger.Log.WithFields(logrus.Fields{
+			"id":       payload.ID,
+			"username": payload.Username,
+			"email":    payload.Email,
+		}).Warn("Missing required fields")
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
 	}
 
-	// Update user in database
-	_, err := h.db.Exec(`
+	result, err := h.db.Exec(`
 		UPDATE users 
 		SET username = $1, email = $2, updated_at = NOW()
 		WHERE id = $3
 	`, payload.Username, payload.Email, payload.ID)
+	
 	if err != nil {
-		log.Printf("Database update error: %v", err)
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"id":    payload.ID,
+		}).Error("Failed to update user")
 		http.Error(w, "Failed to update user", http.StatusInternalServerError)
 		return
 	}
 
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		logger.Log.WithFields(logrus.Fields{
+			"id": payload.ID,
+		}).Warn("User not found for update")
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"id":       payload.ID,
+		"username": payload.Username,
+		"email":    payload.Email,
+	}).Info("User updated successfully")
+
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User updated successfully"})
 }
+

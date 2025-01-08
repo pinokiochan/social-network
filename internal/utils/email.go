@@ -2,47 +2,65 @@ package utils
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
+	"github.com/pinokiochan/social-network/internal/logger"
+	"github.com/sirupsen/logrus"
 	"net/smtp"
 	"os"
-	"github.com/joho/godotenv"
-	
-	
 )
 
-// SendEmail sends an email to a specified address with the given subject and body
 func SendEmail(to, subject, body string) error {
-	// Load .env file to read environment variables
 	err := godotenv.Load()
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to load .env file")
 		return fmt.Errorf("Error loading .env file: %v", err)
 	}
 
-	// Get SMTP server configuration from environment variables
-	smtpHost := os.Getenv("SMTP_HOST") // e.g. smtp.mail.me.com
-	smtpPort := os.Getenv("SMTP_PORT") // e.g. 587
-	smtpUser := os.Getenv("SMTP_USER") // e.g. pinokiochan_n@icloud.com
-	smtpPass := os.Getenv("SMTP_PASS") // e.g. password or app-specific password
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
 
 	if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPass == "" {
+		logger.Log.WithFields(logrus.Fields{
+			"host": smtpHost != "",
+			"port": smtpPort != "",
+			"user": smtpUser != "",
+		}).Error("Missing SMTP configuration")
 		return fmt.Errorf("SMTP configuration is missing in environment variables")
 	}
 
 	from := smtpUser
 	recipients := []string{to}
 
-	// Compose the message with proper headers
 	message := []byte(fmt.Sprintf(
 		"From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s",
 		from, to, subject, body,
 	))
 
-	// Connect to the SMTP server with authentication
+	logger.Log.WithFields(logrus.Fields{
+		"to":      to,
+		"subject": subject,
+		"from":    from,
+	}).Debug("Attempting to send email")
+
 	auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
 	address := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
 	err = smtp.SendMail(address, auth, from, recipients, message)
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"to":    to,
+		}).Error("Failed to send email")
 		return fmt.Errorf("failed to send email: %v", err)
 	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"to":      to,
+		"subject": subject,
+	}).Info("Email sent successfully")
 
 	return nil
 }
