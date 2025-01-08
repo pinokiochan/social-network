@@ -16,7 +16,7 @@
       <a href="/admin" style="text-decoration: none; color: #007BFF;">Admin Panel</a>
     </div>
     <h1>Email Broadcast</h1>
-    <form id="emailForm">
+    <form id="emailForm" enctype="multipart/form-data">
       <label for="subject">Topic</label>
       <input type="text" id="subject" name="subject" placeholder="Enter email subject" required>
 
@@ -25,6 +25,9 @@
 
       <label for="users">Recipients (comma-separated emails)</label>
       <input type="text" id="users" name="users" placeholder="e.g. user1@example.com, user2@example.com" required>
+
+      <label for="attachment">Attachment (optional)</label>
+      <input type="file" id="attachment" name="attachment">
 
       <button type="submit">Send Emails</button>
       <p class="error" id="errorMessage"></p>
@@ -36,3 +39,4 @@
 </body>
 
 </html>
+

@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"os"
+	"io"
+	"path/filepath"
 	"github.com/pinokiochan/social-network/internal/models"
 	"github.com/pinokiochan/social-network/internal/utils"
 	"github.com/pinokiochan/social-network/internal/logger"
@@ -86,33 +89,60 @@ func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) BroadcastEmailToSelectedUsers(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		Subject string   `json:"subject"`
-		Body    string   `json:"body"`
-		Users   []string `json:"users"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		logger.Log.WithError(err).Error("Invalid request body")
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10 MB max
+		logger.Log.WithError(err).Error("Failed to parse multipart form")
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
+	subject := r.FormValue("subject")
+	body := r.FormValue("body")
+	users := r.Form["users[]"]
+
+	file, header, err := r.FormFile("attachment")
+	if err != nil && err != http.ErrMissingFile {
+		logger.Log.WithError(err).Error("Error retrieving file from form")
+		http.Error(w, "Error retrieving file", http.StatusBadRequest)
+		return
+	}
+
+	var attachmentPath string
+	if file != nil {
+		defer file.Close()
+		attachmentPath = filepath.Join(os.TempDir(), header.Filename)
+		outFile, err := os.Create(attachmentPath)
+		if err != nil {
+			logger.Log.WithError(err).Error("Failed to create temporary file")
+			http.Error(w, "Failed to process attachment", http.StatusInternalServerError)
+			return
+		}
+		defer outFile.Close()
+		if _, err := io.Copy(outFile, file); err != nil {
+			logger.Log.WithError(err).Error("Failed to save attachment")
+			http.Error(w, "Failed to process attachment", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	logger.Log.WithFields(logrus.Fields{
-		"subject":     request.Subject,
-		"user_count":  len(request.Users),
+		"subject":     subject,
+		"user_count":  len(users),
+		"has_attachment": attachmentPath != "",
 	}).Info("Starting email broadcast")
 
 	h.wg.Add(1)
 	go func() {
 		defer h.wg.Done()
-		for _, userEmail := range request.Users {
-			err := utils.SendEmail(userEmail, request.Subject, request.Body)
+		for _, userEmail := range users {
+			err := utils.SendEmail(userEmail, subject, body, attachmentPath)
 			if err != nil {
 				logger.Log.WithError(err).WithField("email", userEmail).Error("Failed to send broadcast email")
 				continue
 			}
 			logger.Log.WithField("email", userEmail).Info("Broadcast email sent successfully")
+		}
+		if attachmentPath != "" {
+			os.Remove(attachmentPath)
 		}
 		logger.Log.Info("Email broadcast completed")
 	}()

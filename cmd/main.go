@@ -64,7 +64,7 @@ func main() {
 	mux.HandleFunc("/api/admin/users/delete", middleware.AdminOnly(adminHandler.DeleteUser))
 	mux.HandleFunc("/api/admin/users/edit", middleware.AdminOnly(adminHandler.EditUser))
 
-	mux.HandleFunc("/api/send-email", middleware.JWT(userHandler.SendEmail))
+	
 	mux.HandleFunc("/", handlers.ServeHTML)
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 
