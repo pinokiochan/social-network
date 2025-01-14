@@ -1,0 +1,68 @@
+{"level":"info","msg":"Starting application","time":"2025-01-14T06:38:22+05:00"}
+{"db":"social-network","host":"127.0.0.1","level":"info","msg":"Attempting database connection","port":5432,"time":"2025-01-14T06:38:23+05:00"}
+{"level":"info","msg":"Database connection established successfully","status":"connected","time":"2025-01-14T06:38:23+05:00"}
+{"level":"info","msg":"Database connection established","time":"2025-01-14T06:38:23+05:00"}
+{"address":"127.0.0.1:8080","level":"info","msg":"Starting server","time":"2025-01-14T06:38:23+05:00"}
+{"ip":"127.0.0.1:49591","level":"info","method":"GET","msg":"Incoming request","path":"/posts","time":"2025-01-14T06:38:23+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":50,"level":"info","method":"GET","msg":"Request completed","path":"/posts","time":"2025-01-14T06:38:23+05:00"}
+{"ip":"127.0.0.1:49591","level":"info","method":"GET","msg":"Incoming request","path":"/static/css/style.css","time":"2025-01-14T06:38:23+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"ip":"127.0.0.1:49590","level":"info","method":"GET","msg":"Incoming request","path":"/static/js/script.js","time":"2025-01-14T06:38:23+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":159,"level":"info","method":"GET","msg":"Request completed","path":"/static/js/script.js","time":"2025-01-14T06:38:23+05:00"}
+{"duration_ms":162,"level":"info","method":"GET","msg":"Request completed","path":"/static/css/style.css","time":"2025-01-14T06:38:23+05:00"}
+{"ip":"127.0.0.1:49590","level":"info","method":"GET","msg":"Incoming request","path":"/img/social-media.png","time":"2025-01-14T06:38:23+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":29,"level":"info","method":"GET","msg":"Request completed","path":"/img/social-media.png","time":"2025-01-14T06:38:23+05:00"}
+{"ip":"127.0.0.1:49594","level":"info","method":"POST","msg":"Incoming request","path":"/api/login","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"email":"era@gmail.com","isAdmin":false,"level":"info","msg":"User logged in successfully","time":"2025-01-14T06:38:40+05:00","userID":5}
+{"duration_ms":115,"level":"info","method":"POST","msg":"Request completed","path":"/api/login","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49594","level":"info","method":"GET","msg":"Incoming request","path":"/api/posts","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":10,"level":"info","msg":"Posts fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":21,"level":"info","method":"GET","msg":"Request completed","path":"/api/posts","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49595","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":5,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49596","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":3,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49595","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":2,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49596","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":1,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49595","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":2,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49596","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":1,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49595","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":1,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49596","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":1,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49595","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":2,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49596","level":"info","method":"GET","msg":"Incoming request","path":"/api/comments","time":"2025-01-14T06:38:40+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"count":44,"level":"info","msg":"Comments fetched successfully","time":"2025-01-14T06:38:40+05:00"}
+{"duration_ms":3,"level":"info","method":"GET","msg":"Request completed","path":"/api/comments","time":"2025-01-14T06:38:40+05:00"}
+{"ip":"127.0.0.1:49598","level":"info","method":"GET","msg":"Incoming request","path":"/admin","time":"2025-01-14T06:39:01+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":34,"level":"info","method":"GET","msg":"Request completed","path":"/admin","time":"2025-01-14T06:39:01+05:00"}
+{"ip":"127.0.0.1:49598","level":"info","method":"GET","msg":"Incoming request","path":"/static/css/admin.css","time":"2025-01-14T06:39:01+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"ip":"127.0.0.1:49599","level":"info","method":"GET","msg":"Incoming request","path":"/static/js/admin.js","time":"2025-01-14T06:39:01+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":24,"level":"info","method":"GET","msg":"Request completed","path":"/static/css/admin.css","time":"2025-01-14T06:39:01+05:00"}
+{"duration_ms":64,"level":"info","method":"GET","msg":"Request completed","path":"/static/js/admin.js","time":"2025-01-14T06:39:01+05:00"}
+{"ip":"127.0.0.1:49599","level":"info","method":"GET","msg":"Incoming request","path":"/api/admin/users","time":"2025-01-14T06:39:01+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":0,"level":"info","method":"GET","msg":"Request completed","path":"/api/admin/users","time":"2025-01-14T06:39:01+05:00"}
+{"ip":"127.0.0.1:49598","level":"info","method":"GET","msg":"Incoming request","path":"/api/admin/stats","time":"2025-01-14T06:39:01+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"duration_ms":0,"level":"info","method":"GET","msg":"Request completed","path":"/api/admin/stats","time":"2025-01-14T06:39:01+05:00"}
+{"ip":"127.0.0.1:49598","level":"info","method":"POST","msg":"Incoming request","path":"/api/login","time":"2025-01-14T06:39:11+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"email":"admin@example.com","isAdmin":true,"level":"info","msg":"User logged in successfully","time":"2025-01-14T06:39:12+05:00","userID":74}
+{"duration_ms":135,"level":"info","method":"POST","msg":"Request completed","path":"/api/login","time":"2025-01-14T06:39:12+05:00"}
+{"ip":"127.0.0.1:49598","level":"info","method":"GET","msg":"Incoming request","path":"/api/admin/stats","time":"2025-01-14T06:39:12+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"active_users_24h":0,"level":"info","msg":"Admin stats retrieved successfully","time":"2025-01-14T06:39:12+05:00","total_comments":44,"total_posts":58,"total_users":48}
+{"duration_ms":16,"level":"info","method":"GET","msg":"Request completed","path":"/api/admin/stats","time":"2025-01-14T06:39:12+05:00"}
+{"ip":"127.0.0.1:49598","level":"info","method":"GET","msg":"Incoming request","path":"/api/admin/users","time":"2025-01-14T06:39:12+05:00","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+{"level":"info","msg":"Users fetched successfully","time":"2025-01-14T06:39:12+05:00","user_count":48}
+{"duration_ms":0,"level":"info","method":"GET","msg":"Request completed","path":"/api/admin/users","time":"2025-01-14T06:39:12+05:00"}
