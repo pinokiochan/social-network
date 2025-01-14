@@ -1,19 +1,18 @@
 package main
 
-
 import (
 	"context"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
-	"sync"
 
 	"github.com/pinokiochan/social-network/internal/database"
 	"github.com/pinokiochan/social-network/internal/handlers"
+	"github.com/pinokiochan/social-network/internal/logger" // Импортируем пакет logger
 	"github.com/pinokiochan/social-network/internal/middleware"
-	"github.com/pinokiochan/social-network/internal/logger"  // Импортируем пакет logger
 
 	"github.com/sirupsen/logrus"
 )
@@ -29,7 +28,7 @@ func main() {
 	defer logFile.Close()
 
 	// Настройка логгера для записи в файл
-	logger.Log.SetOutput(logFile) // Все логи теперь будут записываться в файл
+	logger.Log.SetOutput(logFile)                    // Все логи теперь будут записываться в файл
 	logger.Log.SetFormatter(&logrus.JSONFormatter{}) // Форматируем логи в JSON
 
 	// Логируем начало работы приложения
@@ -40,7 +39,7 @@ func main() {
 	if err != nil {
 		logger.Log.WithError(err).Fatal("Failed to connect to database")
 	}
-	defer db.Close()  // Убедитесь, что соединение с БД будет закрыто, когда приложение завершится
+	defer db.Close() // Убедитесь, что соединение с БД будет закрыто, когда приложение завершится
 
 	logger.Log.Info("Database connection established")
 
@@ -86,7 +85,7 @@ func main() {
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
 	srv := &http.Server{
-		Addr:         "127.0.0.1:8080",
+		Addr:         "0.0.0.0:8080",
 		Handler:      middleware.LoggingMiddleware(middleware.RateLimitMiddleware(mux)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -105,7 +104,7 @@ func main() {
 	// Ожидание сигнала завершения (Ctrl+C или системное завершение)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit  // Блокируем выполнение до получения сигнала
+	<-quit // Блокируем выполнение до получения сигнала
 
 	// Логируем процесс завершения работы
 	logger.Log.Info("Server is shutting down...")
