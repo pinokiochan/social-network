@@ -10,8 +10,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func main() {
-	db := database.ConnectToDB()
+func seed_data() {
+	// Connect to the database, and handle the error
+	db, err := database.ConnectToDB()
+	if err != nil {
+		log.Fatalf("Error connecting to the database: %v", err)
+	}
 	defer db.Close()
 
 	// Seed users
@@ -29,7 +33,7 @@ func main() {
 
 	// Create admin user
 	adminPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-	_, err := db.Exec(
+	_, err = db.Exec(
 		"INSERT INTO users (username, email, password, is_admin) VALUES ($1, $2, $3, $4)",
 		"admin",
 		"admin@example.com",
