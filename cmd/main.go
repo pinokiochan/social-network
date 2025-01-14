@@ -85,7 +85,7 @@ func main() {
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
 	srv := &http.Server{
-		Addr:         "127.0.0.1:8080",
+		Addr:         "0.0.0.0:10000",
 		Handler:      middleware.LoggingMiddleware(middleware.RateLimitMiddleware(mux)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
