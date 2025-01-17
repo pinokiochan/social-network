@@ -10,9 +10,36 @@ body {
 
 h1, h2, h3 {
     margin: 0;
-    color: #004085;
+    color: #ffffff;
 }
 
+nav.main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    background: linear-gradient(135deg, #00eeff, #000000);
+    color: #ffffff;
+    border-radius: 0 0 12px 12px;
+}
+
+nav.main-nav h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+nav.main-nav .nav-link {
+    color: #ffffff;
+    text-decoration: none;
+    background-color: black;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+nav.main-nav .nav-link:hover {
+    background-color: black;
+}
 a {
     text-decoration: none;
     color: inherit;
@@ -20,7 +47,7 @@ a {
 }
 
 a:hover {
-    color: #0066cc;
+    color: #ffffff;
 }
 
 /* Админ-панель */
@@ -107,7 +134,7 @@ a:hover {
     gap: 10px;
 }
 .stat-card {
-    background: #007bff;
+    background: #000000;
     color: #fff;
     padding: 1.5rem;
     border-radius: 8px;
@@ -161,8 +188,8 @@ input, select, button {
 }
 
 input:focus, select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    border-color: #000000;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 button {
@@ -183,12 +210,12 @@ button {
 }
 
 .button.primary {
-    background-color: #007bff;
+    background-color: #192531;
     color: white;
 }
 
 .button.primary:hover {
-    background-color: #0056b3;
+    background-color: #000000;
 }
 
 .button.danger {
@@ -210,20 +237,42 @@ button {
 }
 
 /* Кнопка редактирования */
-.edit-btn {
-    background-color: #ffc107;
-    color: white;
+/* Стиль кнопок с иконками */
+.edit-btn, .delete-btn {
+    background: none;
     border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
+    color: #fff;
+    font-size: 1rem;
     cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+/* Стиль для кнопки редактирования */
+.edit-btn {
+    background-color: #000000; /* Зеленый */
 }
 
 .edit-btn:hover {
-    background-color: #e0a800;
-    transform: scale(1.05);
+    background-color: #45a049;
+}
+
+/* Стиль для кнопки удаления */
+.delete-btn {
+    background-color: #f44336; /* Красный */
+}
+
+.delete-btn:hover {
+    background-color: #e53935;
+}
+
+/* Стиль для иконок */
+.edit-btn i, .delete-btn i {
+    font-size: 1.2rem;
 }
 
 /* Навигация */
@@ -233,7 +282,7 @@ button {
     align-items: center;
     margin-bottom: 2rem;
     padding: 1rem;
-    background: #004085;
+    background: #000000;
     border-radius: 8px;
     color: white;
 }

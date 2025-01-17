@@ -99,23 +99,31 @@ async function getPosts(searchParams = {}) {
                 <strong>${post.username}</strong>: ${post.content}<br>
                 <small>Created: ${formatDate(post.created_at)}</small>
                 <div class="post-actions">
-                    <button onclick="editPost(${post.id}, '${post.content.replace(/'/g, "\\'")}')" class="edit-btn">Edit</button>
-                    <button onclick="deletePost(${post.id})" class="delete-btn">Delete</button>
+                    ${post.user_id === currentUser.id ? `
+                        <button onclick="editPost(${post.id}, '${post.content.replace(/'/g, "\\'")}')" class="edit-btn">
+                            <i class="fas fa-edit"></i> 
+                        </button>
+                        <button onclick="deletePost(${post.id})" class="delete-btn">
+                            <i class="fas fa-trash-alt"></i> 
+                        </button>
+                    ` : ''}
                 </div>
                 <div id="comments-${post.id}" class="comments-section"></div>
                 <textarea id="comment-${post.id}" placeholder="Write a comment..."></textarea>
-                <button class="add-comment-btn" data-post-id="${post.id}">Add Comment</button>
+                <button class="add-comment-btn" data-post-id="${post.id}">
+                    <i class="fas fa-comment"></i> Add Comment
+                </button>
             `;
             postList.appendChild(div);
             getComments(post.id);
         });
-        
 
         updatePagination();
     } catch (error) {
         console.error('Error fetching posts:', error);
     }
 }
+
 
 function updatePagination() {
     const paginationContainer = document.getElementById('pagination');
@@ -134,13 +142,13 @@ function changePage(newPage) {
 
 function formatDate(isoDate) {
     const date = new Date(isoDate);
-    const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        hour: 'numeric', 
-        minute: 'numeric', 
-        hour12: true 
+    const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
     };
     return date.toLocaleString('en-US', options);
 }
@@ -263,14 +271,19 @@ async function getComments(postId) {
         const commentList = document.getElementById(`comments-${postId}`);
         commentList.innerHTML = '';
         comments.filter(comment => comment.post_id === postId).forEach(comment => {
-            console.log('Comment user_id:', comment.user_id, 'Current user id:', currentUser ? currentUser.id : 'Not logged in');
             const div = document.createElement('div');
             div.classList.add('comment');
             div.innerHTML = `
                 <strong>${comment.username}</strong>: ${comment.content}
                 <div class="comment-actions">
-                    <button onclick="editComment(${comment.id}, '${comment.content.replace(/'/g, "\\'")}')" class="edit-btn">Edit</button>
-                    <button onclick="deleteComment(${comment.id})" class="delete-btn">Delete</button>
+                    ${comment.user_id === currentUser.id ? `
+                        <button onclick="editComment(${comment.id}, '${comment.content.replace(/'/g, "\\'")}')" class="edit-btn">
+                            <i class="fas fa-edit"></i> 
+                        </button>
+                        <button onclick="deleteComment(${comment.id})" class="delete-btn">
+                            <i class="fas fa-trash-alt"></i> 
+                        </button>
+                    ` : ''}
                 </div>
             `;
             commentList.appendChild(div);
@@ -279,6 +292,7 @@ async function getComments(postId) {
         console.error('Error fetching comments:', error);
     }
 }
+
 
 async function createComment(event, postId) {
     event.preventDefault();

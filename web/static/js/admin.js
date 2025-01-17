@@ -1,19 +1,19 @@
 // Admin token management
 class AdminAuth {
     static TOKEN_KEY = 'adminToken';
-    
+
     static getToken() {
         return localStorage.getItem(this.TOKEN_KEY);
     }
-    
+
     static setToken(token) {
         localStorage.setItem(this.TOKEN_KEY, token);
     }
-    
+
     static removeToken() {
         localStorage.removeItem(this.TOKEN_KEY);
     }
-    
+
     static isAuthenticated() {
         return !!this.getToken();
     }
@@ -149,11 +149,16 @@ async function loadUsersList(filters = {}, sortBy = null) {
         // Обновляем интерфейс
         const usersList = document.getElementById('users-list');
         usersList.innerHTML = filteredUsers.map(user => `
-            <div class="user-item">
-                <span>${user.username} (${user.email})</span>
-                <button onclick="editUser(${user.id})" class="edit-btn">Edit</button>
-                <button onclick="deleteUser(${user.id})" class="delete-btn">Delete</button>
-            </div>
+        <div class="user-item">
+        <span>${user.username} (${user.email})</span>
+        <button onclick="editUser(${user.id})" class="edit-btn">
+            <i class="fas fa-edit"></i> 
+        </button>
+        <button onclick="deleteUser(${user.id})" class="delete-btn">
+            <i class="fas fa-trash-alt"></i> 
+        </button>
+    </div>
+    
         `).join('');
     } catch (error) {
         console.error('Error loading users:', error);
@@ -226,7 +231,7 @@ function cancelEdit(userId) {
 
 async function handleAdminLogin(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('admin-email').value;
     const password = document.getElementById('admin-password').value;
 
@@ -255,7 +260,7 @@ async function handleAdminLogin(event) {
 // UI Management: Функция для обработки отправки рассылки
 async function handleBroadcastEmail(event) {
     event.preventDefault();
-    
+
     const recipient = document.getElementById('email-recipient').value;
     const subject = document.getElementById('email-subject').value;
     const body = document.getElementById('email-body').value;
@@ -271,7 +276,7 @@ async function handleBroadcastEmail(event) {
         if (response.ok) {
             const text = await response.text();
             console.log('Raw server response:', text);
-            
+
             try {
                 const data = JSON.parse(text);
                 if (data.success) {
@@ -286,7 +291,7 @@ async function handleBroadcastEmail(event) {
         } else {
             showError('Failed to send email. Server returned an error.');
         }
-        
+
         document.getElementById('broadcast-form').reset();
     } catch (error) {
         console.error('Error sending broadcast:', error);

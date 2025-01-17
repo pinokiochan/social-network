@@ -4,22 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Social Network</title>
+    <title>Admin Panel - so.net</title>
     <link rel="stylesheet" href="/static/css/admin.css">
     <link rel="icon" href="img\social-media.png">
+    <!-- Подключаем Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 
 </head>
 
 <body>
-    <nav class="navigation">
-        <h1>Admin Panel</h1>
-        <a href="/" class="button primary">Back to Main Site</a>
-        
-        <button id="logout-btn" class="button danger">Logout</button>
+    <nav class="main-nav">
+        <h1>so.net</h1>
+        <div id="admin-link">
+            <a href="/" class="nav-link">Back to Main Site</a>
+            <a href="/admin" class="nav-link">Admin Panel</a>
+        </div>
     </nav>
-    
+
+
     <div class="admin-panel">
-        
+
 
         <!-- Notification -->
         <div id="notification" class="notification"></div>
@@ -83,7 +88,7 @@
                 <form id="broadcast-form" class="form-grid">
                     <form id="broadcast-form" class="form-grid">
                         <a href="/email" class="button primary">Send Email</a>
-        
+
                     </form>
             </div>
         </div>
@@ -93,4 +98,3 @@
 </body>
 
 </html>
-

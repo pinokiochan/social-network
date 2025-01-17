@@ -26,7 +26,7 @@ nav.main-nav {
     justify-content: space-between;
     align-items: center;
     padding: 15px 25px;
-    background: linear-gradient(135deg, #007BFF, #0056b3);
+    background: linear-gradient(135deg, #00eeff, #000000);
     color: #ffffff;
     border-radius: 0 0 12px 12px;
 }
@@ -39,14 +39,14 @@ nav.main-nav h1 {
 nav.main-nav .nav-link {
     color: #ffffff;
     text-decoration: none;
-    background-color: #0056b3;
+    background-color: black;
     padding: 8px 15px;
     border-radius: 5px;
     transition: background-color 0.3s;
 }
 
 nav.main-nav .nav-link:hover {
-    background-color: #003d80;
+    background-color: black;
 }
 
 /* Формы аутентификации */
@@ -67,13 +67,13 @@ input, textarea, button {
 }
 
 input:focus, textarea:focus {
-    border-color: #007BFF;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    border-color: black;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0);
     outline: none;
 }
 
 button {
-    background-color: #007BFF;
+    background-color: black;
     color: #ffffff;
     border: none;
     cursor: pointer;
@@ -117,17 +117,17 @@ button:hover {
 }
 
 .edit-btn, .delete-btn {
-    padding: 10px 15px;
-    font-size: 0.9rem;
+    padding: 2px 3px;
+    font-size: 0.8rem;
     font-weight: bold;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
 .edit-btn {
-    background-color: #4CAF50;
+    background-color: #000000;
 }
 
 .delete-btn {
@@ -135,11 +135,11 @@ button:hover {
 }
 
 .edit-btn:hover {
-    background-color: #45a049;
+    background-color: #346137;
 }
 
 .delete-btn:hover {
-    background-color: #d32f2f;
+    background-color: #5f1616;
 }
 
 /* Секция комментариев */
@@ -162,7 +162,7 @@ textarea {
 #pagination button {
     padding: 12px 20px;
     font-size: 1rem;
-    background-color: #007BFF;
+    background-color: #000000;
     color: white;
     border: none;
     border-radius: 5px;
@@ -171,7 +171,7 @@ textarea {
 }
 
 #pagination button:hover {
-    background-color: #0056b3;
+    background-color: #8c8c8c;
 }
 
 #pagination button:disabled {
@@ -181,7 +181,7 @@ textarea {
 }
 
 input, button {
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
 textarea {
@@ -189,6 +189,29 @@ textarea {
     padding: 12px;
     resize: vertical;
     border-radius: 8px;
+}
+.comment-actions button i {
+    margin-right: 8px; /* Отступ между иконкой и текстом */
+    font-size: 1.2rem;
+    vertical-align: middle;
+}
+
+.edit-btn i, .delete-btn i {
+    font-size: 1rem;  /* Размер иконки можно уменьшить, если нужно */
+}
+
+/* Create Post button */
+#create-post-form button {
+    background-color: black;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+#create-post-form button:hover {
+    background-color: #8c8c8c; /* Gray color on hover */
 }
 
 /* Responsive design */
