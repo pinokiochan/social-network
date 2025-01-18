@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,8 +11,9 @@ import (
 
 	"github.com/pinokiochan/social-network/internal/database"
 	"github.com/pinokiochan/social-network/internal/handlers"
-	"github.com/pinokiochan/social-network/internal/logger"
+	"github.com/pinokiochan/social-network/internal/logger" // Импортируем пакет logger
 	"github.com/pinokiochan/social-network/internal/middleware"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +28,7 @@ func main() {
 	defer logFile.Close()
 
 	// Настройка логгера для записи в файл
-	logger.Log.SetOutput(logFile)
+	logger.Log.SetOutput(logFile)                    // Все логи теперь будут записываться в файл
 	logger.Log.SetFormatter(&logrus.JSONFormatter{}) // Форматируем логи в JSON
 
 	// Логируем начало работы приложения
@@ -75,7 +75,7 @@ func main() {
 	mux.HandleFunc("/api/comments/update", middleware.JWT(commentHandler.UpdateComment))
 	mux.HandleFunc("/api/comments/delete", middleware.JWT(commentHandler.DeleteComment))
 
-	// Админ-роуты
+	// Админ-роуты (ограничены пользователями с правами администратора)
 	mux.HandleFunc("/admin", handlers.ServeAdminHTML)
 	mux.HandleFunc("/api/admin/stats", middleware.AdminOnly(adminHandler.GetStats))
 	mux.HandleFunc("/api/admin/broadcast-to-selected", adminHandler.BroadcastEmailToSelectedUsers)
@@ -87,23 +87,20 @@ func main() {
 	mux.HandleFunc("/", handlers.ServeHTML)
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 
-	// Создание и настройка HTTPS-сервера с тайм-аутами
+	// Создание и настройка HTTP-сервера с тайм-аутами
 	srv := &http.Server{
-		Addr:         ":443", // HTTPS порт
+		Addr:         "0.0.0.0:8080",
 		Handler:      middleware.LoggingMiddleware(middleware.RateLimitMiddleware(mux)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
-		},
 	}
 
 	// Запуск сервера в горутине, чтобы он не блокировал основное выполнение
 	go func() {
 		logger.Log.WithField("address", srv.Addr).Info("Starting server")
 
-		// Запуск HTTPS сервера
-		if err := srv.ListenAndServeTLS("server.crt", "server.key"); err != nil && err != http.ErrServerClosed {
+		// Запуск сервера и логирование ошибок
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Log.WithError(err).Fatal("Server failed to start")
 		}
 	}()
