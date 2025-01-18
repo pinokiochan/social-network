@@ -88,8 +88,13 @@ func main() {
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
+	port := os.Getenv("PORT") // Render provides this environment variable
+	if port == "" {
+		port = "8080" // default to 8080 if no PORT variable is set
+	}
+
 	srv := &http.Server{
-		Addr:         "0.0.0.0:8080",
+		Addr:         ":" + port, // Use the dynamic port
 		Handler:      middleware.LoggingMiddleware(middleware.RateLimitMiddleware(mux)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
