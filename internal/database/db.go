@@ -3,20 +3,24 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/lib/pq"
 	"github.com/pinokiochan/social-network/internal/logger"
 )
 
 func ConnectToDB() (*sql.DB, error) {
-	connStr := "host=127.0.0.1 port=5432 user=postgres password=0000 dbname=social-network sslmode=disable"
-	
+	// Получаем строку подключения из переменной окружения
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		return nil, fmt.Errorf("DATABASE_URL not set")
+	}
+
 	logger.InfoLogger("Attempting database connection", logger.Fields{
-		"host": "127.0.0.1",
-		"port": 5432,
-		"db":   "social-network",
+		"connection_string": connStr,
 	})
 
+	// Подключаемся к базе данных
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		logger.ErrorLogger(err, logger.Fields{
@@ -25,7 +29,7 @@ func ConnectToDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to open database connection: %v", err)
 	}
 
-	// Test the connection
+	// Тестируем подключение
 	err = db.Ping()
 	if err != nil {
 		logger.ErrorLogger(err, logger.Fields{
