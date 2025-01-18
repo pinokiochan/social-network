@@ -11,8 +11,9 @@ import (
 
 	"github.com/pinokiochan/social-network/internal/database"
 	"github.com/pinokiochan/social-network/internal/handlers"
-	"github.com/pinokiochan/social-network/internal/logger"
+	"github.com/pinokiochan/social-network/internal/logger" // Импортируем пакет logger
 	"github.com/pinokiochan/social-network/internal/middleware"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -87,13 +88,8 @@ func main() {
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
-	port := os.Getenv("APP_PORT") // Render предоставляет эту переменную окружения
-	if port == "" {
-		port = "8080" // default to 8080 if no PORT variable is set
-	}
-
 	srv := &http.Server{
-		Addr:         ":" + port, // Используем динамический порт
+		Addr:         "127.0.0.1:8080",
 		Handler:      middleware.LoggingMiddleware(middleware.RateLimitMiddleware(mux)),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,

@@ -19,7 +19,7 @@ async function register(event) {
     const password = document.getElementById('register-password').value;
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/register', {
+        const response = await fetch('http://127.0.0.1:8080/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password })
@@ -40,7 +40,7 @@ async function login(event) {
     const password = document.getElementById('login-password').value;
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/login', {
+        const response = await fetch('http://127.0.0.1:8080/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -83,7 +83,7 @@ async function getPosts(searchParams = {}) {
             ...searchParams
         });
 
-        const response = await fetch(`https://social-network-2.onrender.com/api/posts?${queryParams}`, {
+        const response = await fetch(`http://127.0.0.1:8080/api/posts?${queryParams}`, {
             headers: { 'Authorization': token }
         });
         if (!response.ok) {
@@ -178,7 +178,7 @@ async function createPost(event) {
     }
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/posts/create', {
+        const response = await fetch('http://127.0.0.1:8080/api/posts/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ async function editPost(postId, currentContent) {
         }
 
         try {
-            const response = await fetch('https://social-network-2.onrender.com/api/posts/update', {
+            const response = await fetch('http://127.0.0.1:8080/api/posts/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -235,7 +235,7 @@ async function deletePost(postId) {
     }
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/posts/delete', {
+        const response = await fetch('http://127.0.0.1:8080/api/posts/delete', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ async function getComments(postId) {
     }
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/comments', {
+        const response = await fetch('http://127.0.0.1:8080/api/comments', {
             headers: { 'Authorization': token }
         });
         if (!response.ok) {
@@ -312,7 +312,7 @@ async function createComment(event, postId) {
     }
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/comments/create', {
+        const response = await fetch('http://127.0.0.1:8080/api/comments/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -346,7 +346,7 @@ async function editComment(commentId, currentContent) {
         }
 
         try {
-            const response = await fetch('https://social-network-2.onrender.com/api/comments/update', {
+            const response = await fetch('http://127.0.0.1:8080/api/comments/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -374,7 +374,7 @@ async function deleteComment(commentId) {
     }
 
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/comments/delete', {
+        const response = await fetch('http://127.0.0.1:8080/api/comments/delete', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

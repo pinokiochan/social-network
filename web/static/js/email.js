@@ -6,19 +6,11 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
     formData.delete('users');
     users.forEach(user => formData.append('users[]', user));
 
-    // Get the JWT token from localStorage
-    const token = localStorage.getItem('jwt');  // Make sure you have stored the token previously
-
-    if (!token) {
-        alert('No token found, please login again.');
-        return;
-    }
-
     try {
-        const response = await fetch('https://social-network-2.onrender.com/api/admin/broadcast-to-selected', {
+        const response = await fetch('http://127.0.0.1:8080/api/admin/broadcast-to-selected', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,  // Use thdee JWT token from localStorage
+                'Authorization': 'Bearer YOUR_JWT_TOKEN', // Replace with the actual token
             },
             body: formData,
         });
