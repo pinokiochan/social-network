@@ -34,7 +34,8 @@ class AdminAPI {
             ...options,
             headers: {
                 ...options.headers,
-                'Authorization': token,
+                'Authorization': `Bearer ${token}`,
+
                 'Content-Type': 'application/json',
             }
         });
