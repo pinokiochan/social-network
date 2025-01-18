@@ -7,7 +7,7 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
     users.forEach(user => formData.append('users[]', user));
 
     try {
-        const response = await fetch('http://0.0.0.0:8080/api/admin/broadcast-to-selected', {
+        const response = await fetch('https://social-network-2.onrender.com/api/admin/broadcast-to-selected', {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer YOUR_JWT_TOKEN', // Replace with the actual token
