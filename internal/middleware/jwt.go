@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"github.com/pinokiochan/social-network/internal/auth"
-
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -16,6 +15,7 @@ func JWT(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		tokenString = tokenString[len("Bearer "):] // Убираем "Bearer " из токена
 		claims := &auth.Claims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return auth.JwtKey, nil
@@ -36,6 +36,7 @@ func GetUserIDFromToken(r *http.Request) (int, error) {
 		return 0, fmt.Errorf("no token provided")
 	}
 
+	tokenString = tokenString[len("Bearer "):] // Убираем "Bearer " из токена
 	claims := &auth.Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return auth.JwtKey, nil

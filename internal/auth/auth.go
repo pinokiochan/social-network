@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"errors"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var JwtKey = []byte("your_secret_key") // В продакшн используйте переменную окружения для ключа
+var JwtKey = []byte(os.Getenv("JWT_SECRET_KEY")) // Используем секрет из переменной окружения
 
 // Структура Claims для JWT
 type Claims struct {
@@ -48,9 +48,6 @@ func VerifyToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
 		return JwtKey, nil
 	})
 
@@ -59,11 +56,7 @@ func VerifyToken(tokenString string) (*Claims, error) {
 	}
 
 	if !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-
-	if time.Now().Unix() > claims.ExpiresAt {
-		return nil, errors.New("token expired")
+		return nil, err
 	}
 
 	return claims, nil
