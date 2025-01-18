@@ -88,7 +88,7 @@ func main() {
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
-	port := os.Getenv("PORT") // Render provides this environment variable
+	port := os.Getenv("APP_PORT") // Render provides this environment variable
 	if port == "" {
 		port = "8080" // default to 8080 if no PORT variable is set
 	}
