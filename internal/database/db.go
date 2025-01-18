@@ -10,8 +10,7 @@ import (
 )
 
 func ConnectToDB() (*sql.DB, error) {
-	// Получаем строку подключения из переменной окружения
-	connStr := os.Getenv("DATABASE_URL")
+	connStr := os.Getenv("DATABASE_URL") // Получаем строку подключения
 	if connStr == "" {
 		return nil, fmt.Errorf("DATABASE_URL not set")
 	}
@@ -20,7 +19,6 @@ func ConnectToDB() (*sql.DB, error) {
 		"connection_string": connStr,
 	})
 
-	// Подключаемся к базе данных
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		logger.ErrorLogger(err, logger.Fields{
@@ -29,7 +27,7 @@ func ConnectToDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to open database connection: %v", err)
 	}
 
-	// Тестируем подключение
+	// Проверяем подключение
 	err = db.Ping()
 	if err != nil {
 		logger.ErrorLogger(err, logger.Fields{
