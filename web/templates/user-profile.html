@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="/static/css/user-profile.css">
+    <link rel="icon" href="img\social-media.png">
+</head>
+
+<body>
+    <nav class="main-nav">
+        <h1>so.net</h1>
+
+        <div class="user-actions">
+            <a href="/index" class="nav-link">Home</a>
+            <a href="/user-profile" class="nav-link">Profile</a>
+            <a href="/admin" class="nav-link">Admin Panel</a>
+            <button id="logout-btn">Logout</button>
+        </div>
+    </nav>
+    <div class="container">
+        <h2>User Profile</h2>
+
+        <div id="profileView">
+            <p><strong>Username:</strong> <span id="username"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>Role:</strong> <span id="role"></span></p>
+            <button id="editProfile">Edit Profile</button>
+        </div>
+
+        <div id="profileEdit" style="display: none;">
+            <label for="editUsername">Username:</label>
+            <input type="text" id="editUsername" placeholder="Enter new username" required>
+
+            <label for="editPassword">Password:</label>
+            <input type="password" id="editPassword" placeholder="Enter new password" required autocomplete="new-password">
+
+            <button id="saveProfile">Save Changes</button>
+            <button id="cancelEdit">Cancel</button>
+        </div>
+        <div id="userPosts">
+            <h3>Your Posts</h3>
+            <!-- Posts will be dynamically inserted here -->
+          </div>
+
+        <div id="message" class="error"></div>
+
+    </div>
+
+    <script src="/static/js/user-profile.js"></script>
+</body>
+
+</html>

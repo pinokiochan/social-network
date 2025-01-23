@@ -84,10 +84,16 @@ func main() {
 	mux.HandleFunc("/api/admin/users/delete", middleware.AdminOnly(adminHandler.DeleteUser))
 	mux.HandleFunc("/api/admin/users/edit", middleware.AdminOnly(adminHandler.EditUser))
 
+	mux.HandleFunc("/user-profile", handlers.ServeUserProfileHTML)
+	mux.HandleFunc("/api/user-profile/data", userHandler.UserData)
+	mux.HandleFunc("/api/user-profile/edit", userHandler.UserUpdate)
+	mux.HandleFunc("/api/user-profile/posts", userHandler.UserPosts)
+
 	// Регулярные HTML-страницы
 	mux.HandleFunc("/", handlers.ServeHTML)
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
 	mux.HandleFunc("/index", handlers.ServeIndexHTML)
+	
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
 	srv := &http.Server{

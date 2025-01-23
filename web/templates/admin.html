@@ -26,22 +26,24 @@
 
     <div class="admin-panel">
 
-
+        
         <!-- Notification -->
         <div id="notification" class="notification"></div>
-
+        
         <!-- Login Form -->
         <div id="login-form" class="admin-login">
             <h2>Admin Login</h2>
             <form id="admin-login-form" class="form-grid">
-                <input type="email" id="admin-email" placeholder="Email" required>
-                <input type="password" id="admin-password" placeholder="Password" required>
+                <input type="email" id="admin-email" placeholder="Email" required autocomplete="new-password">
+                <input type="password" id="admin-password" placeholder="Password" required autocomplete="new-password">
                 <button type="submit" class="button primary">Login</button>
+            
             </form>
         </div>
 
         <!-- Admin Content -->
         <div id="admin-content" style="display: none;">
+            <h2>Admin Panel</h2>
             <!-- Statistics Section -->
             <div class="stats-section">
                 <h3>Statistics</h3>

@@ -42,6 +42,24 @@ func ServeIndexHTML(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, nil)
 }
 
+func ServeUserProfileHTML(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("./web/templates/user-profile.html")
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"path":  "./web/templates/user-profile.html",
+		}).Error("Failed to parse user-profile template")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	logger.Log.WithFields(logrus.Fields{
+		"path": r.URL.Path,
+	}).Debug("Serving user-profile page")
+	
+	t.Execute(w, nil)
+}
+
 func ServeAdminHTML(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("./web/templates/admin.html")
 	if err != nil {

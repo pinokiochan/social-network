@@ -1,17 +1,16 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
-	"database/sql"
-
 	"github.com/pinokiochan/social-network/internal/auth"
 	"github.com/pinokiochan/social-network/internal/logger"
 	"github.com/pinokiochan/social-network/internal/models"
 	"github.com/pinokiochan/social-network/internal/utils"
 	"github.com/sirupsen/logrus"
+	"net/http"
+	"strconv"
 )
 
 type UserHandler struct {
@@ -185,7 +184,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Check the is_active value
 	if !isActive {
 		http.Error(w, "Email not verified", 400)
-		return 
+		return
 	}
 
 	token, err := auth.GenerateToken(user.ID, user.IsAdmin)
@@ -274,7 +273,6 @@ func (h *UserHandler) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	query := "UPDATE users set is_active=true where email=$1"
 	_, err = h.db.Exec(query, credentials.Email)
 
@@ -296,4 +294,220 @@ func (h *UserHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status": "success",
 	})
+}
+
+// user-profile
+// logic for update current user data: password, username
+// user activity
+// get posts from current user
+// get comments from current user
+func (h *UserHandler) UserUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		logger.Log.WithFields(logrus.Fields{
+			"method": r.Method,
+		}).Warn("Method not allowed")
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var payload struct {
+		ID       int    `json:"id"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Failed to decode payload")
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if payload.ID == 0 || payload.Username == "" || payload.Password == "" {
+		logger.Log.WithFields(logrus.Fields{
+			"id":       payload.ID,
+			"username": payload.Username,
+			"password": payload.Password,
+		}).Warn("Missing required fields")
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
+
+	// Hash the password before saving it
+	hashedPassword, err := auth.HashPassword(payload.Password)
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Error hashing password")
+		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		return
+	}
+
+	// Update user data in database
+	result, err := h.db.Exec(`
+		UPDATE users 
+		SET username = $1, password = $2, updated_at = NOW()
+		WHERE id = $3
+	`, payload.Username, hashedPassword, payload.ID)
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"id":    payload.ID,
+		}).Error("Failed to update user")
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		logger.Log.WithFields(logrus.Fields{
+			"id": payload.ID,
+		}).Warn("User not found for update")
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	logger.Log.WithFields(logrus.Fields{
+		"id":       payload.ID,
+		"username": payload.Username,
+	}).Info("User updated successfully")
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "User updated successfully"})
+}
+func (h *UserHandler) UserData(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// Обработка получения данных пользователя
+		userID := r.URL.Query().Get("id")
+		if userID == "" {
+			logger.Log.Warn("User ID is required")
+			http.Error(w, `{"error": "User ID is required"}`, http.StatusBadRequest)
+			return
+		}
+
+		var user struct {
+			Username string `json:"username"`
+			Email    string `json:"email"`
+			IsAdmin  bool   `json:"is_admin"`
+		}
+
+		err := h.db.QueryRow(`
+			SELECT username, email, is_admin
+			FROM users 
+			WHERE id = $1
+		`, userID).Scan(&user.Username, &user.Email, &user.IsAdmin)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				// Пользователь не найден, возвращаем ошибку в JSON формате
+				logger.Log.WithFields(logrus.Fields{
+					"id": userID,
+				}).Warn("User not found")
+				http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+			} else {
+				// Ошибка при запросе, возвращаем внутреннюю ошибку в JSON формате
+				logger.Log.WithFields(logrus.Fields{
+					"error": err.Error(),
+					"id":    userID,
+				}).Error("Failed to fetch user data")
+				http.Error(w, `{"error": "Failed to fetch user data"}`, http.StatusInternalServerError)
+			}
+			return
+		}
+
+		// Логируем успешное получение данных пользователя
+		logger.Log.WithFields(logrus.Fields{
+			"id":       userID,
+			"username": user.Username,
+			"email":    user.Email,
+		}).Info("User data retrieved successfully")
+
+		// Возвращаем данные пользователя в JSON формате
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
+		return
+	}
+}
+
+// UserPosts handles the request to get posts for a specific user
+func (h *UserHandler) UserPosts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		logger.Log.WithFields(logrus.Fields{
+			"method": r.Method,
+		}).Warn("Method not allowed")
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Get user ID from query parameters
+	userIDStr := r.URL.Query().Get("id")
+	if userIDStr == "" {
+		logger.Log.Warn("User ID is required")
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Warn("Invalid user ID")
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch posts from the database
+	rows, err := h.db.Query(`
+		SELECT content, created_at
+		FROM posts
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`, userID)
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error":  err.Error(),
+			"userID": userID,
+		}).Error("Failed to fetch user posts")
+		http.Error(w, "Failed to fetch user posts", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var posts []struct {
+		Content   string `json:"content"`
+		CreatedAt string `json:"created_at"`
+	}
+
+	for rows.Next() {
+		var post struct {
+			Content   string `json:"content"`
+			CreatedAt string `json:"created_at"`
+		}
+		if err := rows.Scan(&post.Content, &post.CreatedAt); err != nil {
+			logger.Log.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Error scanning post row")
+			continue
+		}
+		posts = append(posts, post)
+	}
+
+	if err = rows.Err(); err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("Error iterating over post rows")
+		http.Error(w, "Error fetching posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Log successful retrieval of posts
+	logger.Log.WithFields(logrus.Fields{
+		"userID": userID,
+		"count":  len(posts),
+	}).Info("User posts retrieved successfully")
+
+	// Return posts as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(posts)
 }
