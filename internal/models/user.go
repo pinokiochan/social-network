@@ -6,13 +6,14 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID        int       `json:"id"`        // Unique identifier for the user
-	Username  string    `json:"username"`  // The user's username
-	Email     string    `json:"email"`     // The user's email address
-	Password  string    `json:"-"`         // The user's password (not exposed in JSON response)
-	IsAdmin   bool      `json:"is_admin"`  // Flag to determine if the user is an admin
-	CreatedAt time.Time `json:"created_at"`// The timestamp when the user was created
-	UpdatedAt time.Time `json:"updated_at"`// The timestamp when the user was last updated
+	ID        int       `json:"id"`         // Unique identifier for the user
+	Username  string    `json:"username"`   // The user's username
+	Email     string    `json:"email"`      // The user's email address
+	Password  string    `json:"-"`          // The user's password (not exposed in JSON response)
+	IsAdmin   bool      `json:"is_admin"`   // Flag to determine if the user is an admin
+	CreatedAt time.Time `json:"created_at"` // The timestamp when the user was created
+	UpdatedAt time.Time `json:"updated_at"` // The timestamp when the user was last updated
+	IsActive  bool      `json:"is_active"`
 }
 
 // NewUser creates and returns a new user instance with the provided username, email, and password

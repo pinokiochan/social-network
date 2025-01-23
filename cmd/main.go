@@ -65,6 +65,7 @@ func main() {
 	// Настройка API-роутов
 	mux.HandleFunc("/api/register", userHandler.Register)
 	mux.HandleFunc("/api/login", userHandler.Login)
+	mux.HandleFunc("/api/verify", userHandler.Verify)
 	mux.HandleFunc("/api/index/users", middleware.JWT(userHandler.GetUsers))
 	mux.HandleFunc("/api/index/posts", middleware.JWT(postHandler.GetPosts))
 	mux.HandleFunc("/api/index/posts/create", middleware.JWT(postHandler.CreatePost))
