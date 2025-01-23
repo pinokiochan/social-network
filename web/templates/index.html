@@ -1,69 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sonet</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="icon" href="img\social-media.png">
 </head>
-
 <body>
     <nav class="main-nav">
         <h1>so.net</h1>
-        <div id="admin-link">
+        
+        <div class="user-actions">
+            <a href="/index" class="nav-link">Home</a>
+            <a href="/profile" class="nav-link">Profile</a>
             <a href="/admin" class="nav-link">Admin Panel</a>
+            <button id="logout-btn">Logout</button>
         </div>
     </nav>
 
     <div class="container">
+        <div id="content" style="display: block;">
 
-
-
-        <div id="auth-forms">
-            <h2>Register</h2>
-            <form id="register-form">
-                <input type="text" id="register-username" placeholder="Username" required autocomplete="username">
-                <input type="email" id="register-email" placeholder="Email" required autocomplete="email">
-                <input type="password" id="register-password" placeholder="Password" required autocomplete="new-password">
-                <button type="submit">Register</button>
-            </form>
-            
-            <h2>Login</h2>
-            <!-- Форма логина -->
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email" required autocomplete="email">
-                <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
-                <button type="submit">Login</button>
-            </form>
-        </div>
-
-        <div id="content" style="display: none;">
-            <button id="logout-btn">Logout</button>
 
             <form id="search-form">
                 <input type="text" id="search-input" placeholder="Search posts...">
-                <input type="text" id="user-filter" placeholder="Filter by user ID">
+                <input type="text" id="username-filter" placeholder="Filter by username">
                 <input type="date" id="date-filter">
                 <button type="submit">Search</button>
             </form>
 
             <h2>Posts</h2>
-            <div id="post-list"></div>
+            <div id="post-list">
+                <!-- Посты будут отображаться здесь -->
+            </div>
 
             <div id="pagination"></div>
 
             <h3>Create a Post</h3>
             <form id="create-post-form">
                 <textarea id="post-content" placeholder="Enter post content"></textarea>
+                
                 <button type="submit">Create Post</button>
             </form>
-
         </div>
     </div>
     <script src="/static/js/script.js"></script>
 </body>
-
 </html>

@@ -65,15 +65,15 @@ func main() {
 	// Настройка API-роутов
 	mux.HandleFunc("/api/register", userHandler.Register)
 	mux.HandleFunc("/api/login", userHandler.Login)
-	mux.HandleFunc("/api/users", middleware.JWT(userHandler.GetUsers))
-	mux.HandleFunc("/api/posts", middleware.JWT(postHandler.GetPosts))
-	mux.HandleFunc("/api/posts/create", middleware.JWT(postHandler.CreatePost))
-	mux.HandleFunc("/api/posts/update", middleware.JWT(postHandler.UpdatePost))
-	mux.HandleFunc("/api/posts/delete", middleware.JWT(postHandler.DeletePost))
-	mux.HandleFunc("/api/comments", middleware.JWT(commentHandler.GetComments))
-	mux.HandleFunc("/api/comments/create", middleware.JWT(commentHandler.CreateComment))
-	mux.HandleFunc("/api/comments/update", middleware.JWT(commentHandler.UpdateComment))
-	mux.HandleFunc("/api/comments/delete", middleware.JWT(commentHandler.DeleteComment))
+	mux.HandleFunc("/api/index/users", middleware.JWT(userHandler.GetUsers))
+	mux.HandleFunc("/api/index/posts", middleware.JWT(postHandler.GetPosts))
+	mux.HandleFunc("/api/index/posts/create", middleware.JWT(postHandler.CreatePost))
+	mux.HandleFunc("/api/index/posts/update", middleware.JWT(postHandler.UpdatePost))
+	mux.HandleFunc("/api/index/posts/delete", middleware.JWT(postHandler.DeletePost))
+	mux.HandleFunc("/api/index/comments", middleware.JWT(commentHandler.GetComments))
+	mux.HandleFunc("/api/index/comments/create", middleware.JWT(commentHandler.CreateComment))
+	mux.HandleFunc("/api/index/comments/update", middleware.JWT(commentHandler.UpdateComment))
+	mux.HandleFunc("/api/index/comments/delete", middleware.JWT(commentHandler.DeleteComment))
 
 	// Админ-роуты (ограничены пользователями с правами администратора)
 	mux.HandleFunc("/admin", handlers.ServeAdminHTML)
@@ -86,6 +86,7 @@ func main() {
 	// Регулярные HTML-страницы
 	mux.HandleFunc("/", handlers.ServeHTML)
 	mux.HandleFunc("/email", handlers.ServeEmailHTML)
+	mux.HandleFunc("/index", handlers.ServeIndexHTML)
 
 	// Создание и настройка HTTP-сервера с тайм-аутами
 	srv := &http.Server{

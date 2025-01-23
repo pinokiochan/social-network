@@ -1,73 +1,31 @@
+
 let currentUser = null;
-let currentPage = 1;
+let currentPage = 1; // Делаем переменную глобальной
 const pageSize = 10;
 
-function showAuthForms() {
-    document.getElementById('auth-forms').style.display = 'block';
-    document.getElementById('content').style.display = 'none';
-}
-
 function showContent() {
-    document.getElementById('auth-forms').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
-}
-
-async function register(event) {
-    event.preventDefault();
-    const username = document.getElementById('register-username').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-
-    try {
-        const response = await fetch('http://127.0.0.1:8080/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password })
-        });
-        if (response.ok) {
-            alert('Registration successful. Please log in.');
-        } else {
-            alert('Registration failed. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-async function login(event) {
-    event.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    try {
-        const response = await fetch('http://127.0.0.1:8080/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            currentUser = { id: data.user_id, email: email };
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            console.log('Logged in user:', currentUser);
-            showContent();
-            getPosts();
-        } else {
-            alert('Login failed. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+  document.getElementById("content").style.display = "block"
 }
 
 function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('currentUser');
-    currentUser = null;
-    showAuthForms();
+  localStorage.removeItem("token")
+  localStorage.removeItem("currentUser")
+  window.location.href = "/"
 }
 
+async function searchPosts() {
+    const keyword = document.getElementById('search-input').value;
+    const username = document.getElementById('username-filter').value; // Получаем имя пользователя из поля ввода
+    const date = document.getElementById('date-filter').value;
+
+    const searchParams = {};
+    if (keyword) searchParams.keyword = keyword;
+    if (username) searchParams.username = username; // Добавляем фильтрацию по имени пользователя
+    if (date) searchParams.date = date;
+
+    currentPage = 1;
+    await getPosts(searchParams);
+}
 async function getPosts(searchParams = {}) {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -83,7 +41,7 @@ async function getPosts(searchParams = {}) {
             ...searchParams
         });
 
-        const response = await fetch(`http://127.0.0.1:8080/api/posts?${queryParams}`, {
+        const response = await fetch(`http://127.0.0.1:8080/api/index/posts?${queryParams}`, {
             headers: { 'Authorization': token }
         });
         if (!response.ok) {
@@ -153,19 +111,7 @@ function formatDate(isoDate) {
     return date.toLocaleString('en-US', options);
 }
 
-async function searchPosts() {
-    const keyword = document.getElementById('search-input').value;
-    const userId = document.getElementById('user-filter').value;
-    const date = document.getElementById('date-filter').value;
 
-    const searchParams = {};
-    if (keyword) searchParams.keyword = keyword;
-    if (userId) searchParams.user_id = userId;
-    if (date) searchParams.date = date;
-
-    currentPage = 1;
-    await getPosts(searchParams);
-}
 
 async function createPost(event) {
     event.preventDefault();
@@ -178,7 +124,7 @@ async function createPost(event) {
     }
 
     try {
-        const response = await fetch('http://127.0.0.1:8080/api/posts/create', {
+        const response = await fetch('http://127.0.0.1:8080/api/index/posts/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -207,7 +153,7 @@ async function editPost(postId, currentContent) {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/posts/update', {
+            const response = await fetch('http://127.0.0.1:8080/api/index/posts/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -235,7 +181,7 @@ async function deletePost(postId) {
     }
 
     try {
-        const response = await fetch('http://127.0.0.1:8080/api/posts/delete', {
+        const response = await fetch('http://127.0.0.1:8080/api/index/posts/delete', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -261,7 +207,7 @@ async function getComments(postId) {
     }
 
     try {
-        const response = await fetch('http://127.0.0.1:8080/api/comments', {
+        const response = await fetch('http://127.0.0.1:8080/api/index/comments', {
             headers: { 'Authorization': token }
         });
         if (!response.ok) {
@@ -293,7 +239,6 @@ async function getComments(postId) {
     }
 }
 
-
 async function createComment(event, postId) {
     event.preventDefault();
     const textarea = document.getElementById(`comment-${postId}`);
@@ -312,7 +257,7 @@ async function createComment(event, postId) {
     }
 
     try {
-        const response = await fetch('http://127.0.0.1:8080/api/comments/create', {
+        const response = await fetch('http://127.0.0.1:8080/api/index/comments/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -346,7 +291,7 @@ async function editComment(commentId, currentContent) {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:8080/api/comments/update', {
+            const response = await fetch('http://127.0.0.1:8080/api/index/comments/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -374,7 +319,7 @@ async function deleteComment(commentId) {
     }
 
     try {
-        const response = await fetch('http://127.0.0.1:8080/api/comments/delete', {
+        const response = await fetch('http://127.0.0.1:8080/api/index/comments/delete', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -392,31 +337,31 @@ async function deleteComment(commentId) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('currentUser');
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token")
+    const storedUser = localStorage.getItem("currentUser")
     if (token && storedUser) {
-        currentUser = JSON.parse(storedUser);
-        console.log('Stored user:', currentUser);
-        showContent();
-        getPosts();
+      currentUser = JSON.parse(storedUser)
+      console.log("Stored user:", currentUser)
+      showContent()
+      getPosts()
     } else {
-        showAuthForms();
+      window.location.href = "/"
     }
-
-    document.getElementById('register-form').addEventListener('submit', register);
-    document.getElementById('login-form').addEventListener('submit', login);
-    document.getElementById('logout-btn').addEventListener('click', logout);
-    document.getElementById('create-post-form').addEventListener('submit', createPost);
-    document.getElementById('search-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        searchPosts();
-    });
-
-    document.addEventListener('click', (event) => {
-        if (event.target.classList.contains('add-comment-btn')) {
-            const postId = parseInt(event.target.getAttribute('data-post-id'));
-            createComment(event, postId);
-        }
-    });
-});
+  
+    document.getElementById("logout-btn").addEventListener("click", logout)
+    document.getElementById("create-post-form").addEventListener("submit", createPost)
+    document.getElementById("search-form").addEventListener("submit", (e) => {
+      e.preventDefault()
+      searchPosts()
+    })
+  
+    document.addEventListener("click", (event) => {
+      if (event.target.classList.contains("add-comment-btn")) {
+        const postId = Number.parseInt(event.target.getAttribute("data-post-id"))
+        createComment(event, postId)
+      }
+    })
+  })
+  
+  

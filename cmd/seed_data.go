@@ -11,7 +11,10 @@ import (
 )
 
 func seed_data() {
-	// Connect to the database, and handle the error
+	// Seed random number generator
+	rand.Seed(time.Now().UnixNano())
+
+	// Connect to the database and handle error
 	db, err := database.ConnectToDB()
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
@@ -23,16 +26,24 @@ func seed_data() {
 		username := fmt.Sprintf("user%d", i)
 		email := fmt.Sprintf("%d@astanait.edu.kz", 100000+i)
 		password := "password123"
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-
-		_, err := db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", username, email, string(hashedPassword))
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			log.Printf("Error inserting user: %v", err)
+			log.Printf("Error hashing password for user %d: %v", i, err)
+			continue
+		}
+
+		_, err = db.Exec("INSERT INTO users (username, email, password, is_admin) VALUES ($1, $2, $3, $4)", username, email, string(hashedPassword), false)
+		if err != nil {
+			log.Printf("Error inserting user %d: %v", i, err)
 		}
 	}
 
 	// Create admin user
-	adminPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	adminPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Error hashing admin password: %v", err)
+	}
+
 	_, err = db.Exec(
 		"INSERT INTO users (username, email, password, is_admin) VALUES ($1, $2, $3, $4)",
 		"admin",
@@ -51,7 +62,7 @@ func seed_data() {
 		createdAt := time.Now().Add(-time.Duration(rand.Intn(30*24)) * time.Hour)
 		_, err := db.Exec("INSERT INTO posts (user_id, content, created_at) VALUES ($1, $2, $3)", userID, content, createdAt)
 		if err != nil {
-			log.Printf("Error inserting post: %v", err)
+			log.Printf("Error inserting post %d: %v", i, err)
 		}
 	}
 
@@ -63,7 +74,7 @@ func seed_data() {
 		createdAt := time.Now().Add(-time.Duration(rand.Intn(30*24)) * time.Hour)
 		_, err := db.Exec("INSERT INTO comments (user_id, post_id, content, created_at) VALUES ($1, $2, $3, $4)", userID, postID, content, createdAt)
 		if err != nil {
-			log.Printf("Error inserting comment: %v", err)
+			log.Printf("Error inserting comment %d: %v", i, err)
 		}
 	}
 

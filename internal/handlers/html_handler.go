@@ -8,11 +8,11 @@ import (
 )
 
 func ServeHTML(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("./web/templates/index.html")
+	t, err := template.ParseFiles("./web/templates/auth.html")
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{
 			"error": err.Error(),
-			"path":  "./web/templates/index.html",
+			"path":  "./web/templates/auth.html",
 		}).Error("Failed to parse template")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -21,6 +21,23 @@ func ServeHTML(w http.ResponseWriter, r *http.Request) {
 	logger.Log.WithFields(logrus.Fields{
 		"path": r.URL.Path,
 	}).Debug("Serving index page")
+	
+	t.Execute(w, nil)
+}
+func ServeIndexHTML(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("./web/templates/index.html")
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"path":  "./web/templates/index.html",
+		}).Error("Failed to parse auth template")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	logger.Log.WithFields(logrus.Fields{
+		"path": r.URL.Path,
+	}).Debug("Serving auth page")
 	
 	t.Execute(w, nil)
 }

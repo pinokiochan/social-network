@@ -1,0 +1,85 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f4f4f9, #e0e0e0);
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2, h3 {
+    color: #333;
+}
+
+/* Стили навигации */
+nav.main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    background: linear-gradient(135deg, #00eeff, #000000);
+    color: #ffffff;
+    border-radius: 0 0 12px 12px;
+}
+
+nav.main-nav h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+nav.main-nav .nav-link {
+    color: #ffffff;
+    text-decoration: none;
+    background-color: black;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+nav.main-nav .nav-link:hover {
+    background-color: black;
+}
+
+/* Формы аутентификации */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+input, textarea, button {
+    font-size: 1rem;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+input:focus, textarea:focus {
+    border-color: black;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0);
+    outline: none;
+}
+
+button {
+    background-color: black;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #575050;
+}

@@ -1,15 +1,16 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
-	"github.com/pinokiochan/social-network/internal/models"
-	"github.com/pinokiochan/social-network/internal/middleware"
+
 	"github.com/pinokiochan/social-network/internal/logger"
+	"github.com/pinokiochan/social-network/internal/middleware"
+	"github.com/pinokiochan/social-network/internal/models"
 	"github.com/sirupsen/logrus"
-	"database/sql"
 )
 
 type PostHandler struct {
@@ -78,6 +79,7 @@ func (h *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	keyword := query.Get("keyword")
 	userID := query.Get("user_id")
 	date := query.Get("date")
+	username := query.Get("username") // Добавляем параметр для фильтрации по username
 	page := query.Get("page")
 	pageSize := query.Get("page_size")
 
@@ -88,47 +90,59 @@ func (h *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 		pageSize = "10"
 	}
 
+	// Преобразуем page и pageSize в целые числа
 	offset, _ := strconv.Atoi(page)
 	limit, _ := strconv.Atoi(pageSize)
 	offset = (offset - 1) * limit
 
 	baseQuery := `
-		SELECT posts.id, posts.user_id, posts.content, posts.created_at, users.username 
-		FROM posts 
-		JOIN users ON posts.user_id = users.id
-	`
+        SELECT posts.id, posts.user_id, posts.content, posts.created_at, users.username
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+    `
 	whereClause := []string{}
 	args := []interface{}{}
 
+	// Фильтрация по ключевым словам
 	if keyword != "" {
 		whereClause = append(whereClause, "posts.content ILIKE $"+strconv.Itoa(len(args)+1))
 		args = append(args, "%"+keyword+"%")
 	}
+	// Фильтрация по user_id
 	if userID != "" {
 		whereClause = append(whereClause, "posts.user_id = $"+strconv.Itoa(len(args)+1))
 		args = append(args, userID)
 	}
+	// Фильтрация по дате
 	if date != "" {
 		whereClause = append(whereClause, "DATE(posts.created_at) = $"+strconv.Itoa(len(args)+1))
 		args = append(args, date)
 	}
+	// Фильтрация по username
+	if username != "" {
+		whereClause = append(whereClause, "users.username ILIKE $"+strconv.Itoa(len(args)+1))
+		args = append(args, "%"+username+"%")
+	}
 
+	// Если есть фильтры, добавляем их в запрос
 	if len(whereClause) > 0 {
 		baseQuery += " WHERE " + strings.Join(whereClause, " AND ")
 	}
 
-	baseQuery += " ORDER BY posts.created_at DESC LIMIT $" + strconv.Itoa(len(args)+1) + 
-		" OFFSET $" + strconv.Itoa(len(args)+2)
+	// Добавляем сортировку и пагинацию
+	baseQuery += " ORDER BY posts.created_at DESC LIMIT $" + strconv.Itoa(len(args)+1) + " OFFSET $" + strconv.Itoa(len(args)+2)
 	args = append(args, limit, offset)
 
 	logger.Log.WithFields(logrus.Fields{
-		"keyword":    keyword,
-		"user_id":    userID,
-		"date":       date,
-		"page":       page,
-		"page_size":  pageSize,
+		"keyword":   keyword,
+		"user_id":   userID,
+		"date":      date,
+		"username":  username, // Логируем также username
+		"page":      page,
+		"page_size": pageSize,
 	}).Debug("Fetching posts with filters")
 
+	// Выполняем запрос
 	rows, err := h.db.Query(baseQuery, args...)
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{
@@ -277,4 +291,3 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
-

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	
 )
 
 // Global logger instance
@@ -48,7 +49,7 @@ type PrettyFormatter struct {
 
 // Format renders a single log entry
 func (f *PrettyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	timestamp := fmt.Sprintf(entry.Time.Format(f.TimestampFormat))
+	timestamp := fmt.Sprint(entry.Time.Format(f.TimestampFormat))
 	level := f.LevelDesc[entry.Level]
 	message := entry.Message
 
