@@ -1,68 +1,111 @@
 # Social Network Platform
 
-## **Overview**
-The Social Network Platform is a web application designed for users to interact by creating posts, commenting on them, and engaging in discussions. This project demonstrates advanced CRUD operations, user authentication, and additional features like search, pagination, and filtering to enhance usability.
+## Overview
+The Social Network Platform is a robust web application designed for user interaction through posts, comments, and discussions. This project showcases advanced CRUD operations, user authentication, and additional features like search, pagination, and filtering to enhance user experience and engagement.
 
-## **Features**
+## Live Demo
+Experience the platform live at: [https://social-network-2.onrender.com/](https://social-network-2.onrender.com/)
+
+## Features
 1. **User Management:**
-   - User registration and login.
-   - Ability to edit or delete only your own posts and comments.
+   - User registration with email verification
+   - Secure login and authentication
+   - Profile management (edit profile, change password)
+   - User roles (regular user, admin)
 
 2. **Posts and Comments:**
-   - Create, read, update, and delete posts and comments.
-   - Add comments to posts, including posts by other users.
+   - Create, read, update, and delete posts and comments
+   - Rich text editor for post creation
+   - Like and unlike posts
+   - Add comments to posts, including nested comments
 
 3. **Advanced Functionality:**
-   - **Search Posts:** Find posts containing specific keywords.
-   - **Pagination:** Navigate through posts or comments in a paginated manner.
-   - **Filtering:** Filter posts by a specific user or date range.
+   - **Search:** Find posts and users by keywords
+   - **Pagination:** Navigate through posts or comments efficiently
+   - **Filtering:** Filter posts by user, date range, or popularity
+   - **Real-time Updates:** Instant notifications for new posts and comments
 
-## **Team Members**
-- **Beibars Yergali** (Solo Developer)
+4. **Admin Features:**
+   - User management (ban/unban users)
+   - Content moderation (remove inappropriate posts/comments)
+   - Analytics dashboard
 
-## **Screenshot**
-![Login](./web/img/Login.jpg)
-![Main Page](./web/img/main.jpg)
-![Lower part](./web/img/footerjpg.jpg)
+5. **Security:**
+   - JWT-based authentication
+   - Password hashing
+   - CSRF protection
+   - Rate limiting to prevent abuse
 
-## **Tools and Technologies**
-- **Backend:** Golang (Go)
+## Technologies Used
+- **Backend:** Go (Golang)
 - **Frontend:** HTML, CSS, JavaScript
 - **Database:** PostgreSQL
-- **Testing:** Postman
+- **ORM:** GORM
+- **Authentication:** JWT
+- **Testing:** Go testing package, Postman
+- **Deployment:** Render
 
-## **How to Start the Project**
+## Screenshots
+![Login Page](./web/img/Login.jpg)
+![Main Feed](./web/img/main.jpg)
+![Footer and Additional Features](./web/img/footerjpg.jpg)
 
-### **Prerequisites**
-1. Install **Golang**: [Go Download](https://golang.org/dl/)
-2. Install **PostgreSQL**: [PostgreSQL Download](https://www.postgresql.org/download/)
-3. Install **Postman** for testing: [Postman Download](https://www.postman.com/)
+## Local Development Setup
 
-### **Setup Steps**
+### Prerequisites
+1. Go (1.16+): [Download Go](https://golang.org/dl/)
+2. PostgreSQL: [Download PostgreSQL](https://www.postgresql.org/download/)
+3. Git: [Download Git](https://git-scm.com/downloads)
+
+### Setup Steps
 1. Clone the repository:
    ```bash
    git clone https://github.com/pinokiochan/social-network.git
    cd social-network
-### Step 2: Set Up the Database
-1. Ensure that PostgreSQL is installed and running on your system. If not, download and install it from PostgreSQL Download.
-2. Open your PostgreSQL client (e.g., pgAdmin, psql) and execute the SQL commands in the database.sql file to create the necessary tables:
-sql
-\i /path/to/database.sql
-3. Update the main.go file with your PostgreSQL credentials in the connectToDB function. Example:
-connStr := "host=127.0.0.1 port=5432 user=your_username password=your_password dbname=social-network sslmode=disable"
-### Step 3: Set Up the Backend
-1. Install dependencies:
+   
+2. Set up the database:
+
+- Create a new PostgreSQL database named `social-network`
+- Update the database connection string in `config/config.go`:
+   ```bash
+   connStr := "host=localhost port=5432 user=your_username password=your_password dbname=social-network sslmode=disable"
+   ```
+3. Install dependencies:
 ```bash
-go mod init social-network
 go mod tidy
 ```
-2. Run the backend server:
-```bash
+4. Run database migrations:
+```bash 
+go run cmd/migrate/main.go
+```
+5.Start the server:
+```bash 
 go run cmd/main.go
 ```
-You should see the message: Server is running on port 8080.
-### FINAL step
-RUN http://127.0.0.1:8080/ in any browser
+6. Access the application at `http://localhost:8080`
+
+## Deployment
+
+The application is currently deployed on Render. For deployment instructions, refer to the [Render documentation](https://render.com/docs).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+- [Gorilla Mux](https://github.com/gorilla/mux) for routing
+- [GORM](https://gorm.io/) for ORM
+- [JWT-Go](https://github.com/dgrijalva/jwt-go) for JWT authentication
+- [Render](https://render.com/) for hosting
 
 
+## Contact
 
+For any queries or suggestions, please contact:
+
+- Beibars Yergali - [GitHub](https://github.com/pinokiochan)
