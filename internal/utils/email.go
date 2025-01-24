@@ -5,9 +5,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pinokiochan/social-network/internal/logger"
 	"github.com/sirupsen/logrus"
-	"net/smtp"
+	"gopkg.in/gomail.v2"
 	"os"
-	"github.com/jordan-wright/email"
 )
 
 func SendEmail(to, subject, body, attachmentPath string) error {
@@ -37,22 +36,15 @@ func SendEmail(to, subject, body, attachmentPath string) error {
 	}
 
 	// Создание нового письма
-	e := email.NewEmail()
-	e.From = smtpUser
-	e.To = []string{to}
-	e.Subject = subject
-	e.Text = []byte(body)
+	mailer := gomail.NewMessage()
+	mailer.SetHeader("From", smtpUser)
+	mailer.SetHeader("To", to)
+	mailer.SetHeader("Subject", subject)
+	mailer.SetBody("text/plain", body)
 
 	// Прикрепление файла, если путь указан
 	if attachmentPath != "" {
-		_, err := e.AttachFile(attachmentPath)
-		if err != nil {
-			logger.Log.WithFields(logrus.Fields{
-				"error": err.Error(),
-				"path":  attachmentPath,
-			}).Error("Failed to attach file to email")
-			return fmt.Errorf("failed to attach file: %v", err)
-		}
+		mailer.Attach(attachmentPath)
 	}
 
 	// Логирование попытки отправки письма
@@ -63,9 +55,8 @@ func SendEmail(to, subject, body, attachmentPath string) error {
 	}).Debug("Attempting to send email")
 
 	// Отправка письма
-	auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-	address := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
-	err = e.Send(address, auth)
+	dialer := gomail.NewDialer(smtpHost, 587, smtpUser, smtpPass)
+	err = dialer.DialAndSend(mailer)
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{
 			"error": err.Error(),
