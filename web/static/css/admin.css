@@ -1,45 +1,73 @@
 /* Общие стили */
 body {
+    font-family: "Roboto", sans-serif;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    color: #262626;
     margin: 0;
     padding: 0;
-    font-family: 'Arial', sans-serif;
-    background-color: #f9fafc;
-    color: #333;
     line-height: 1.6;
 }
 
-h1, h2, h3 {
-    margin: 0;
-    color: #ffffff;
+.container {
+
+    max-width: 935px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
+:root {
+    --primary-color: #590353;
+    --secondary-color: #ff4800;
+    --accent-color: #ff00c8;
+    --background-color: #f0f2f5;
+    --text-color: #333;
+    --light-text-color: #666;
+}
+
+/* Навигация */
 nav.main-nav {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 25px;
-    background: linear-gradient(135deg, #00eeff, #000000);
-    color: #ffffff;
-    border-radius: 0 0 12px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 nav.main-nav h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
+    color: #fff;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-nav.main-nav .nav-link {
-    color: #ffffff;
+.nav-link,
+#logout-btn {
+    color: #fff;
     text-decoration: none;
-    background-color: black;
+    margin-left: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
     padding: 8px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    border-radius: 20px;
 }
 
-nav.main-nav .nav-link:hover {
-    background-color: black;
+.nav-link:hover,
+#logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }
+
+#logout-btn {
+    background-color: #fd1d1d;
+    border: none;
+    cursor: pointer;
+}
+
 a {
     text-decoration: none;
     color: inherit;
@@ -55,9 +83,15 @@ a:hover {
     max-width: 1200px;
     margin: 2rem auto;
     padding: 2rem;
-    background: #fff;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    color:white;
+}
+.logo {
+    height: 45px; /* Укажите желаемую высоту */
+    width: auto; /* Сохраняет пропорции изображения */
+    display: flex;
 }
 
 /* Уведомления */
@@ -89,6 +123,7 @@ a:hover {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+    
 }
 
 .sortable:hover {
@@ -122,6 +157,7 @@ a:hover {
     align-items: center;
     padding: 10px;
     border-bottom: 1px solid #eee;
+    
 }
 
 .user-info {
@@ -133,8 +169,9 @@ a:hover {
     display: flex;
     gap: 10px;
 }
+
 .stat-card {
-    background: #000000;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
     color: #fff;
     padding: 1.5rem;
     border-radius: 8px;
@@ -154,22 +191,9 @@ a:hover {
     display: grid;
     gap: 1rem;
     margin-bottom: 2rem;
+    
 }
 
-.user-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s;
-}
-
-.user-item:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
 
 /* Форма */
 .form-grid {
@@ -179,15 +203,19 @@ a:hover {
     margin-bottom: 2rem;
 }
 
-input, select, button {
+input,
+select {
     padding: 0.75rem;
     font-size: 1rem;
     border-radius: 5px;
     border: 1px solid #ddd;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    color:white;
 }
 
-input:focus, select:focus {
+input:focus,
+select:focus {
     border-color: #000000;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
@@ -196,6 +224,7 @@ button {
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.2s, opacity 0.2s;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
 }
 
 /* Кнопки */
@@ -207,6 +236,11 @@ button {
     text-align: center;
     border: none;
     transition: background-color 0.3s ease, transform 0.2s;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+}
+.button:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .button.primary {
@@ -238,41 +272,44 @@ button {
 
 /* Кнопка редактирования */
 /* Стиль кнопок с иконками */
-.edit-btn, .delete-btn {
+.user-item button {
     background: none;
     border: none;
-    color: #fff;
-    font-size: 1rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    font-size: 14px;
+    margin-right: 18px;
+    padding: 5px;
+    transition: color 0.3s ease;
+    justify-content: right;
 }
 
 /* Стиль для кнопки редактирования */
-.edit-btn {
-    background-color: #000000; /* Зеленый */
-}
 
-.edit-btn:hover {
-    background-color: #45a049;
-}
-
-/* Стиль для кнопки удаления */
+.edit-btn,
 .delete-btn {
-    background-color: #f44336; /* Красный */
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    margin-right: 18px;
+    
 }
 
+.edit-btn:hover,
 .delete-btn:hover {
-    background-color: #e53935;
-}
+    opacity: 0.7;
+    transform: translateY(-3px);
 
-/* Стиль для иконок */
-.edit-btn i, .delete-btn i {
-    font-size: 1.2rem;
+}
+.fa-edit{
+    margin-right: 18px;
+    font-style: italic;
+    transition: color 0.3s ease;
+    color: rgb(0, 0, 0);
+}
+.fa-trash-alt,
+.fa-trash-can {
+    font-size: 18px;
+    transition: color 0.3s ease;
+    color: black;
 }
 
 /* Навигация */
@@ -303,7 +340,42 @@ button {
     max-width: 400px;
     margin: 2rem auto;
     padding: 2rem;
-    background: #fff;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+
+
+/* Адаптивный дизайн */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    nav.main-nav {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .user-actions {
+        margin-top: 15px;
+    }
+
+    .nav-link,
+    #logout-btn {
+        margin-left: 0;
+        margin-right: 15px;
+        margin-bottom: 10px;
+    }
 }

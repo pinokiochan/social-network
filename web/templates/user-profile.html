@@ -7,17 +7,21 @@
     <title>User Profile</title>
     <link rel="stylesheet" href="/static/css/user-profile.css">
     <link rel="icon" href="img\social-media.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
     <nav class="main-nav">
-        <h1>sonet</h1>
+        <h1>sonet<img src="img/social-media.png" alt="Logo" class="logo"></h1>
+
 
         <div class="user-actions">
-            <a href="/index" class="nav-link">Home</a>
-            <a href="/user-profile" class="nav-link">Profile</a>
-            <a href="/admin" class="nav-link">Admin Panel</a>
-            <button id="logout-btn">Logout</button>
+            <a href="/index" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/user-profile" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="/admin" class="nav-link"><i class="fas fa-cog"></i> Admin Panel</a>
+            <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </nav>
     <div class="container">
@@ -35,18 +39,19 @@
             <input type="text" id="editUsername" placeholder="Enter new username" required>
 
             <label for="editPassword">Password:</label>
-            <input type="password" id="editPassword" placeholder="Enter new password" required autocomplete="new-password">
+            <input type="password" id="editPassword" placeholder="Enter new password" required
+                autocomplete="new-password">
 
             <button id="saveProfile">Save Changes</button>
             <button id="cancelEdit">Cancel</button>
         </div>
         <br>
-    
+
         <h3>Your Posts</h3>
         <div id="userPosts">
-            
+
             <!-- Posts will be dynamically inserted here -->
-          </div>
+        </div>
 
         <div id="message" class="error"></div>
 

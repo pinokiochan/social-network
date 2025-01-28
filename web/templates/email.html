@@ -6,15 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Email Broadcast</title>
   <link rel="stylesheet" href="/static/css/email.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" href="img\social-media.png">
 </head>
 
 <body>
-  <div class="container">
-    <div style="margin-bottom: 20px;">
-      <a href="/" style="margin-right: 10px; text-decoration: none; color: #000000;">Back to Main Site</a>
-      <a href="/admin" style="text-decoration: none; color: #000000;">Admin Panel</a>
+  <nav class="main-nav">
+    <h1>sonet<img src="img/social-media.png" alt="Logo" class="logo"></h1>
+
+
+    <div class="user-actions">
+      <a href="/index" class="nav-link"><i class="fas fa-home"></i> Home</a>
+      <a href="/user-profile" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+      <a href="/admin" class="nav-link"><i class="fas fa-cog"></i> Admin Panel</a>
+      <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </div>
+  </nav>
+  <div class="container">
+
     <h1>Email Broadcast</h1>
     <form id="emailForm" enctype="multipart/form-data">
       <label for="subject">Topic</label>
@@ -29,7 +39,7 @@
       <label for="attachment">Attachment (optional)</label>
       <input type="file" id="attachment" name="attachment">
 
-      <button type="submit">Send Emails</button>
+      <button class="sendmail" type="submit">Send Emails</button>
       <p class="error" id="errorMessage"></p>
       <p class="success" id="successMessage"></p>
     </form>
@@ -39,4 +49,3 @@
 </body>
 
 </html>
-

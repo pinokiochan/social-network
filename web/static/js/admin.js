@@ -151,12 +151,14 @@ async function loadUsersList(filters = {}, sortBy = null) {
         usersList.innerHTML = filteredUsers.map(user => `
         <div class="user-item">
         <span>${user.username} (${user.email})</span>
-        <button onclick="editUser(${user.id})" class="edit-btn">
-            <i class="fas fa-edit"></i> 
-        </button>
-        <button onclick="deleteUser(${user.id})" class="delete-btn">
-            <i class="fas fa-trash-alt"></i> 
-        </button>
+        <div class="user-actions">
+            <button onclick="editUser(${user.id})" class="edit-btn">
+               <i class="fas fa-edit"></i> 
+            </button>
+            <button onclick="deleteUser(${user.id})" class="delete-btn">
+               <i class="fas fa-trash-alt"></i> 
+            </button>
+        </div>
     </div>
     
         `).join('');

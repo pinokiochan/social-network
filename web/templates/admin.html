@@ -9,20 +9,24 @@
     <link rel="icon" href="img\social-media.png">
     <!-- Подключаем Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 
 </head>
 
 <body>
     <nav class="main-nav">
-        <h1>sonet</h1>
-        <div id="admin-link">
-            <a href="/" class="nav-link">Back to Main Site</a>
-            <a href="/admin" class="nav-link">Admin Panel</a>
-            <button id="logout-btn">Logout</button>
+        <h1>sonet<img src="img/social-media.png" alt="Logo" class="logo"></h1>
+        
+        
+        
+        <div class="user-actions">
+            <a href="/index" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/user-profile" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="/admin" class="nav-link"><i class="fas fa-cog"></i> Admin Panel</a>
+            <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </nav>
-
 
     <div class="admin-panel">
 
@@ -65,6 +69,14 @@
                         <p id="active-users">Loading...</p>
                     </div>
                 </div>
+                <div class="broadcast-section">
+                    <h3>Broadcast Email</h3>
+                    <form id="broadcast-form" class="form-grid">
+                        <form id="broadcast-form" class="form-grid">
+                            <a href="/email" class="button primary">Send Email</a>
+    
+                        </form>
+                </div>
             </div>
 
             <!-- User Management -->
@@ -86,14 +98,7 @@
             </div>
 
             <!-- Broadcast Email -->
-            <div class="broadcast-section">
-                <h3>Broadcast Email</h3>
-                <form id="broadcast-form" class="form-grid">
-                    <form id="broadcast-form" class="form-grid">
-                        <a href="/email" class="button primary">Send Email</a>
-
-                    </form>
-            </div>
+            
         </div>
     </div>
 

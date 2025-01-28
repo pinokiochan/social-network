@@ -1,59 +1,85 @@
+/* Общие стили */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f4f4f9, #e0e0e0);
-    color: #333;
+    font-family: "Roboto", sans-serif;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    color: #262626;
     margin: 0;
     padding: 0;
+    line-height: 1.6;
 }
 
 .container {
-    max-width: 700px;
-    margin: 30px auto;
+
+    max-width: 935px;
+    margin: 0 auto;
     padding: 20px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
-h1, h2, h3 {
-    color: #333;
+:root {
+    --primary-color: #590353;
+    --secondary-color: #ff4800;
+    --accent-color: #ff00c8;
+    --background-color: #f0f2f5;
+    --text-color: #333;
+    --light-text-color: #666;
 }
 
-/* Стили навигации */
+/* Навигация */
 nav.main-nav {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 25px;
-    background: linear-gradient(135deg, #00eeff, #000000);
-    color: #ffffff;
-    border-radius: 0 0 12px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 nav.main-nav h1 {
-    font-size: 1.8rem;
-    font-weight: 600;
+    color: #fff;
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
-
-nav.main-nav .nav-link {
-    color: #ffffff;
+.nav-link,
+#logout-btn {
+    color: #fff;
     text-decoration: none;
-    background-color: black;
+    margin-left: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
     padding: 8px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    border-radius: 20px;
 }
 
-nav.main-nav .nav-link:hover {
-    background-color: black;
+.nav-link:hover,
+#logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }
 
+#logout-btn {
+    background-color: #fd1d1d;
+    border: none;
+    cursor: pointer;
+}
 /* Формы аутентификации */
 form {
     display: flex;
     flex-direction: column;
     gap: 15px;
     margin-bottom: 25px;
+}
+.text{
+    color:white;
+}
+.logo {
+    height: 45px; /* Укажите желаемую высоту */
+    width: auto; /* Сохраняет пропорции изображения */
+    display: flex;
 }
 
 input, textarea, button {
@@ -63,16 +89,18 @@ input, textarea, button {
     border-radius: 8px;
     transition: all 0.3s ease;
     font-weight: 500;
+    color:white;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
 }
 
 input:focus, textarea:focus {
-    border-color: black;
+    border-color: rgb(255, 255, 255);
     box-shadow: 0 0 5px rgba(0, 0, 0, 0);
     outline: none;
 }
 
 button {
-    background-color: black;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));;
     color: #ffffff;
     border: none;
     cursor: pointer;
@@ -81,5 +109,6 @@ button {
 }
 
 button:hover {
-    background-color: #575050;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }

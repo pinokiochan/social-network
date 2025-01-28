@@ -29,3 +29,8 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
         alert('An error occurred. Please try again.');
     }
 });
+function logout() {
+    localStorage.removeItem("token")
+    localStorage.removeItem("currentUser")
+    window.location.href = "/"
+  }
